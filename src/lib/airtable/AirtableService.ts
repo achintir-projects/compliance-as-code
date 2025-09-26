@@ -195,6 +195,23 @@ export class AirtableService {
   }
 
   async saveKnowledgeObjects(objects: KnowledgeObject[]): Promise<void> {
+    // Ensure system tenant exists
+    try {
+      await db.tenant.upsert({
+        where: { id: 'system' },
+        update: {},
+        create: {
+          id: 'system',
+          name: 'System',
+          domain: 'system.local',
+          status: 'ACTIVE',
+          config: {},
+        },
+      });
+    } catch (error) {
+      console.error('Error creating system tenant:', error);
+    }
+
     for (const obj of objects) {
       try {
         await db.knowledgeObject.upsert({
@@ -325,6 +342,23 @@ export class AirtableService {
     regulationType: string;
     effectiveDate: string;
   }): Promise<KnowledgeObject> {
+    // Ensure system tenant exists
+    try {
+      await db.tenant.upsert({
+        where: { id: 'system' },
+        update: {},
+        create: {
+          id: 'system',
+          name: 'System',
+          domain: 'system.local',
+          status: 'ACTIVE',
+          config: {},
+        },
+      });
+    } catch (error) {
+      console.error('Error creating system tenant:', error);
+    }
+
     const id = `ko_local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const knowledgeObject: KnowledgeObject = {
       id,

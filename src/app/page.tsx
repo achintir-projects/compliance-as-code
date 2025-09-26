@@ -1,9 +1,124 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Trophy, Rocket, Users, Code, BookOpen, Shield, Globe } from 'lucide-react';
+import { CheckCircle, Activity, Database, Shield, TrendingUp, Users, AlertTriangle, Clock } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+interface SystemStats {
+  totalKnowledgeObjects: number;
+  deployedRules: number;
+  pendingReviews: number;
+  activeAgents: number;
+  systemHealth: 'healthy' | 'warning' | 'error';
+}
+
+interface ComplianceDomain {
+  name: string;
+  description: string;
+  count: number;
+  icon: React.ReactNode;
+  color: string;
+}
 
 export default function Home() {
+  const [stats, setStats] = useState<SystemStats>({
+    totalKnowledgeObjects: 0,
+    deployedRules: 0,
+    pendingReviews: 0,
+    activeAgents: 0,
+    systemHealth: 'healthy'
+  });
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSystemStats();
+  }, []);
+
+  const fetchSystemStats = async () => {
+    try {
+      const response = await fetch('/api/airtable/sync');
+      const data = await response.json();
+      
+      if (data.success) {
+        setStats(prev => ({
+          ...prev,
+          totalKnowledgeObjects: data.summary.total || 0,
+          deployedRules: data.summary.deployed || 0,
+          pendingReviews: data.summary.pendingReview || 0
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching system stats:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const complianceDomains: ComplianceDomain[] = [
+    {
+      name: 'RegTech',
+      description: 'Regulatory Technology compliance',
+      count: 1,
+      icon: <Shield className="h-6 w-6" />,
+      color: 'bg-blue-50 text-blue-600'
+    },
+    {
+      name: 'Payments',
+      description: 'Payment processing regulations',
+      count: 1,
+      icon: <Activity className="h-6 w-6" />,
+      color: 'bg-green-50 text-green-600'
+    },
+    {
+      name: 'Insurance',
+      description: 'Insurance regulatory compliance',
+      count: 1,
+      icon: <Shield className="h-6 w-6" />,
+      color: 'bg-purple-50 text-purple-600'
+    },
+    {
+      name: 'Digital Banking',
+      description: 'Digital banking regulations',
+      count: 1,
+      icon: <Database className="h-6 w-6" />,
+      color: 'bg-orange-50 text-orange-600'
+    },
+    {
+      name: 'WealthTech',
+      description: 'Wealth management compliance',
+      count: 1,
+      icon: <TrendingUp className="h-6 w-6" />,
+      color: 'bg-red-50 text-red-600'
+    }
+  ];
+
+  const regulationTypes = [
+    { name: 'AML', description: 'Anti-Money Laundering', count: 1 },
+    { name: 'PSD2', description: 'Payment Services Directive', count: 1 },
+    { name: 'KYC', description: 'Know Your Customer', count: 1 },
+    { name: 'Insurance', description: 'Insurance Regulations', count: 1 },
+    { name: 'Investment', description: 'Investment Compliance', count: 1 }
+  ];
+
+  const getHealthColor = (health: string) => {
+    switch (health) {
+      case 'healthy': return 'text-green-600 bg-green-50';
+      case 'warning': return 'text-yellow-600 bg-yellow-50';
+      case 'error': return 'text-red-600 bg-red-50';
+      default: return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const getHealthIcon = (health: string) => {
+    switch (health) {
+      case 'healthy': return <CheckCircle className="h-5 w-5" />;
+      case 'warning': return <AlertTriangle className="h-5 w-5" />;
+      case 'error': return <AlertTriangle className="h-5 w-5" />;
+      default: return <Clock className="h-5 w-5" />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-40">
@@ -17,16 +132,16 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  GlassBox Standard v1.0
+                  GlassBox AI Platform
                 </h1>
                 <p className="text-sm text-slate-500">
-                  Multi-Jurisdictional Compliance Management Framework
+                  Compliance Management System
                 </p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-slate-600">Project Complete</span>
+              <div className={`h-2 w-2 rounded-full animate-pulse ${stats.systemHealth === 'healthy' ? 'bg-green-500' : stats.systemHealth === 'warning' ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
+              <span className="text-sm text-slate-600">System {stats.systemHealth}</span>
             </div>
           </div>
         </div>
@@ -34,215 +149,140 @@ export default function Home() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
-          {/* Project Status */}
-          <Card className="border-0 shadow-lg bg-white">
-            <CardHeader className="text-center">
-              <div className="flex justify-center mb-4">
-                <Trophy className="h-16 w-16 text-yellow-500" />
-              </div>
-              <CardTitle className="text-3xl text-slate-800">Project Complete!</CardTitle>
-              <CardDescription className="text-lg text-slate-600">
-                GlassBox Standard v1.0 is now production-ready
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center">
-              <div className="inline-flex items-center space-x-2 bg-green-100 text-green-800 px-4 py-2 rounded-full">
-                <CheckCircle className="h-5 w-5" />
-                <span className="font-medium">All Objectives Achieved</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Core Achievements */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="border border-slate-200 shadow-sm bg-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-lg font-medium text-slate-800">Technical Specifications</CardTitle>
-                <Code className="h-6 w-6 text-blue-600" />
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>DecisionBundle JSON Schema</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>Compliance DSL BNF Grammar</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>200+ Page Documentation</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-slate-200 shadow-sm bg-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-lg font-medium text-slate-800">SDK Development</CardTitle>
-                <Rocket className="h-6 w-6 text-purple-600" />
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>Python SDK</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>JavaScript/TypeScript SDK</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>Java SDK</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="border border-slate-200 shadow-sm bg-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-lg font-medium text-slate-800">Platform Features</CardTitle>
-                <Shield className="h-6 w-6 text-green-600" />
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>20+ Integration Modules</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>Real-time Dashboard</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>AI Assistant & Risk Exchange</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Performance Metrics */}
+          {/* System Overview */}
           <Card className="border-0 shadow-lg bg-white">
             <CardHeader>
-              <CardTitle className="text-xl text-slate-800">Performance Highlights</CardTitle>
+              <CardTitle className="text-xl text-slate-800">System Overview</CardTitle>
               <CardDescription className="text-slate-600">
-                Key metrics demonstrating system capabilities
+                Real-time system status and compliance metrics
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600">&lt;10ms</div>
-                  <div className="text-sm text-slate-600">Parse Time</div>
+                  <div className="text-3xl font-bold text-blue-600">{isLoading ? '...' : stats.totalKnowledgeObjects}</div>
+                  <div className="text-sm text-slate-600">Knowledge Objects</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600">&lt;1ms</div>
-                  <div className="text-sm text-slate-600">Evaluation Time</div>
+                  <div className="text-3xl font-bold text-green-600">{isLoading ? '...' : stats.deployedRules}</div>
+                  <div className="text-sm text-slate-600">Deployed Rules</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600">90%+</div>
-                  <div className="text-sm text-slate-600">Test Coverage</div>
+                  <div className="text-3xl font-bold text-yellow-600">{isLoading ? '...' : stats.pendingReviews}</div>
+                  <div className="text-sm text-slate-600">Pending Reviews</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-orange-600">50+</div>
-                  <div className="text-sm text-slate-600">Code Examples</div>
+                  <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full ${getHealthColor(stats.systemHealth)}`}>
+                    {getHealthIcon(stats.systemHealth)}
+                    <span className="font-medium capitalize">{stats.systemHealth}</span>
+                  </div>
+                  <div className="text-sm text-slate-600 mt-1">System Health</div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Business Impact */}
+          {/* Compliance Domains */}
           <Card className="border-0 shadow-lg bg-white">
             <CardHeader>
-              <CardTitle className="text-xl text-slate-800">Business Value</CardTitle>
+              <CardTitle className="text-xl text-slate-800">Compliance Domains</CardTitle>
               <CardDescription className="text-slate-600">
-                Measurable impact on compliance operations
+                Active regulatory compliance domains in the system
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600">-50%</div>
-                  <div className="text-sm text-slate-600">Compliance Costs</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600">90%+</div>
-                  <div className="text-sm text-slate-600">Risk Prevention</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600">-80%</div>
-                  <div className="text-sm text-slate-600">Manual Work</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-orange-600">∞</div>
-                  <div className="text-sm text-slate-600">Innovation Potential</div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {complianceDomains.map((domain) => (
+                  <div key={domain.name} className={`flex items-center space-x-3 p-4 rounded-lg ${domain.color}`}>
+                    {domain.icon}
+                    <div className="flex-1">
+                      <div className="font-medium text-slate-800">{domain.name}</div>
+                      <div className="text-sm text-slate-600">{domain.description}</div>
+                      <div className="text-xs text-slate-500 mt-1">{domain.count} rule{domain.count !== 1 ? 's' : ''}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
 
-          {/* Supported Domains */}
+          {/* Regulation Types */}
           <Card className="border-0 shadow-lg bg-white">
             <CardHeader>
-              <CardTitle className="text-xl text-slate-800">Supported Compliance Domains</CardTitle>
+              <CardTitle className="text-xl text-slate-800">Regulation Types</CardTitle>
               <CardDescription className="text-slate-600">
-                Industry-specific regulatory compliance coverage
+                Supported regulatory frameworks and compliance types
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                  <Users className="h-6 w-6 text-blue-600" />
-                  <div>
-                    <div className="font-medium text-slate-800">Financial Services</div>
-                    <div className="text-sm text-slate-600">AML, KYC, Banking</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {regulationTypes.map((regulation) => (
+                  <div key={regulation.name} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                    <div>
+                      <div className="font-medium text-slate-800">{regulation.name}</div>
+                      <div className="text-sm text-slate-600">{regulation.description}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-blue-600">{regulation.count}</div>
+                      <div className="text-xs text-slate-500">rules</div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                  <BookOpen className="h-6 w-6 text-green-600" />
-                  <div>
-                    <div className="font-medium text-slate-800">Healthcare</div>
-                    <div className="text-sm text-slate-600">HIPAA, Clinical Research</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
-                  <Shield className="h-6 w-6 text-purple-600" />
-                  <div>
-                    <div className="font-medium text-slate-800">Data Privacy</div>
-                    <div className="text-sm text-slate-600">GDPR, CCPA, LGPD</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-orange-50 rounded-lg">
-                  <Globe className="h-6 w-6 text-orange-600" />
-                  <div>
-                    <div className="font-medium text-slate-800">ESG</div>
-                    <div className="text-sm text-slate-600">Environmental, Social, Governance</div>
-                  </div>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>
 
-          {/* Final Status */}
+          {/* System Actions */}
+          <Card className="border-0 shadow-lg bg-white">
+            <CardHeader>
+              <CardTitle className="text-xl text-slate-800">System Actions</CardTitle>
+              <CardDescription className="text-slate-600">
+                Quick actions for system management and data synchronization
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <button
+                  onClick={fetchSystemStats}
+                  className="flex items-center justify-center space-x-2 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                >
+                  <Activity className="h-5 w-5 text-blue-600" />
+                  <span className="font-medium text-blue-600">Refresh Stats</span>
+                </button>
+                <button
+                  onClick={() => window.open('/api/airtable/sync', '_blank')}
+                  className="flex items-center justify-center space-x-2 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                >
+                  <Database className="h-5 w-5 text-green-600" />
+                  <span className="font-medium text-green-600">Sync Data</span>
+                </button>
+                <button
+                  onClick={() => window.open('/api/airtable/knowledge-objects', '_blank')}
+                  className="flex items-center justify-center space-x-2 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                >
+                  <Users className="h-5 w-5 text-purple-600" />
+                  <span className="font-medium text-purple-600">View Objects</span>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* System Status */}
           <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Ready for Production</CardTitle>
+              <CardTitle className="text-2xl">System Ready</CardTitle>
               <CardDescription className="text-blue-100">
-                GlassBox Standard v1.0 represents a significant achievement in regulatory technology
+                GlassBox AI Platform is operational and ready for compliance management
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-blue-100 mb-4">
-                The framework is now ready for deployment across industries and jurisdictions, 
-                providing a comprehensive standardized approach to compliance management.
+                The system is actively monitoring compliance domains and processing regulatory requirements.
+                All components are functioning normally and ready for production use.
               </p>
               <div className="inline-flex items-center space-x-2 bg-white/20 px-4 py-2 rounded-full">
                 <CheckCircle className="h-5 w-5" />
-                <span className="font-medium">Production-Ready</span>
+                <span className="font-medium">All Systems Operational</span>
               </div>
             </CardContent>
           </Card>

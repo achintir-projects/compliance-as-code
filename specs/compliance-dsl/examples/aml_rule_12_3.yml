@@ -1,0 +1,231 @@
+# GDPR Compliance DSL Examples
+
+This file contains specific examples of Compliance DSL rules for GDPR (General Data Protection Regulation) compliance.
+
+## Core GDPR Principles
+
+### Lawfulness, Fairness, and Transparency
+```dsl
+WHEN personal_data.processed = TRUE THEN MUST personal_data.lawful_basis IN ["consent", "contract", "legal_obligation", "vital_interests", "public_task", "legitimate_interests"] AND personal_data.processing_fair = TRUE AND personal_data.transparency_notice_provided = TRUE
+```
+
+### Purpose Limitation
+```dsl
+WHEN data.collected = TRUE THEN MUST data.specified_purpose NOT NULL AND data.explicit_purpose = TRUE AND data.compatible_use = TRUE
+```
+
+### Data Minimization
+```dsl
+WHEN data.processed = TRUE THEN MUST data.collected_fields.ONLY_CONTAINS necessary_fields AND data.minimal_amount = TRUE AND data.relevant_to_purpose = TRUE
+```
+
+### Accuracy
+```dsl
+WHEN personal_data.stored = TRUE THEN MUST data.accuracy_verified = TRUE AND data.up_to_date = TRUE AND data.inaccuracies_corrected = TRUE
+```
+
+### Storage Limitation
+```dsl
+WHEN data.retained = TRUE THEN MUST data.retention_period_specified = TRUE AND data.retention_period <= maximum_allowed_period AND data.automatic_deletion_configured = TRUE
+```
+
+### Integrity and Confidentiality
+```dsl
+WHEN personal_data.processed = TRUE THEN MUST security.appropriate_measures = TRUE AND security.confidentiality_maintained = TRUE AND security.integrity_protected = TRUE AND security.resilience_ensured = TRUE
+```
+
+### Accountability
+```dsl
+WHEN controller.operates = TRUE THEN MUST compliance.documentation_maintained = TRUE AND compliance.records_kept = TRUE AND compliance.dpo_appointed = TRUE AND compliance.dpia_conducted WHEN required
+```
+
+## Data Subject Rights
+
+### Right to be Informed
+```dsl
+WHEN data.collected = TRUE THEN MUST privacy_notice.provided = TRUE AND privacy_notice.concise = TRUE AND privacy_notice.transparent = TRUE AND privacy_notice.accessible = TRUE
+```
+
+### Right of Access
+```dsl
+WHEN subject.access_request = TRUE THEN MUST response.provided WITHIN 30 DAYS AND response.includes_all_data = TRUE AND response.in_machine_readable_format = TRUE AND response.copy_provided = TRUE
+```
+
+### Right to Rectification
+```dsl
+WHEN subject.rectification_request = TRUE THEN MUST data.corrected WITHIN 30 DAYS AND inaccurate_data.rectified = TRUE AND third_parties_notified = TRUE
+```
+
+### Right to Erasure (Right to be Forgotten)
+```dsl
+WHEN subject.erasure_request = TRUE THEN MUST data.deleted WITHIN 30 DAYS AND third_parties_informed = TRUE AND backups_removed = TRUE AND public_links_removed = TRUE
+```
+
+### Right to Restrict Processing
+```dsl
+WHEN subject.restriction_request = TRUE THEN MUST processing_restricted = TRUE AND data_marked_as_restricted = TRUE AND third_parties_notified = TRUE
+```
+
+### Right to Data Portability
+```dsl
+WHEN subject.portability_request = TRUE THEN MUST data.provided IN machine_readable_format AND data.transmitted_directly = TRUE AND data_complete = TRUE AND data_structured = TRUE
+```
+
+### Right to Object
+```dsl
+WHEN subject.objection = TRUE THEN MUST processing_stopped = TRUE AND objection_acknowledged = TRUE AND alternative_options_explained = TRUE
+```
+
+### Rights Related to Automated Decision Making
+```dsl
+WHEN automated_decision_made = TRUE THEN MUST human_intervention_available = TRUE AND explanation_provided = TRUE AND right_to_express_view = TRUE AND right_to_challenge = TRUE
+```
+
+## Consent Management
+
+### Valid Consent
+```dsl
+WHEN consent.relied_upon = TRUE THEN MUST consent.freely_given = TRUE AND consent.specific = TRUE AND consent.informed = TRUE AND consent.unambiguous = TRUE AND consent.demonstrable = TRUE
+```
+
+### Withdrawal of Consent
+```dsl
+WHEN consent.withdrawn = TRUE THEN MUST processing_stopped = TRUE AND withdrawal_easy = TRUE AND immediate_effect = TRUE AND data_erased WHEN requested
+```
+
+### Child Consent
+```dsl
+WHEN data_subject.age < 16 THEN MUST parental_consent_obtained = TRUE AND child_age_verified = TRUE AND parental_control_mechanism = TRUE
+```
+
+## Data Breach Management
+
+### Breach Notification
+```dsl
+WHEN data_breach.occurred = TRUE THEN MUST supervisory_authority.notified WITHIN 72 HOURS AND breach.documented = TRUE AND affected_individuals.notified WHEN high_risk
+```
+
+### Breach Assessment
+```dsl
+WHEN data_breach.detected = TRUE THEN MUST risk_assessment.conducted = TRUE AND impact_evaluation.completed = TRUE AND mitigation_measures.implemented = TRUE
+```
+
+## International Data Transfers
+
+### Adequacy Decisions
+```dsl
+WHEN data.transferred_international = TRUE THEN MUST destination_country.adequacy_decision = TRUE OR appropriate_safeguards.in_place = TRUE
+```
+
+### Standard Contractual Clauses
+```dsl
+WHEN scc.used = TRUE THEN MUST clauses.current_version = TRUE AND clauses.signed = TRUE AND data_protection_incorporated = TRUE AND third_party_beneficiaries_informed = TRUE
+```
+
+### Binding Corporate Rules
+```dsl
+WHEN bcr.used = TRUE THEN MUST bcr.approved = TRUE AND bcr.implemented = TRUE AND bcr.enforceable = TRUE AND employees_trained = TRUE
+```
+
+## Data Processing by Processors
+
+### Processor Selection
+```dsl
+WHEN processor.appointed = TRUE THEN MUST processor.sufficient_guarantees = TRUE AND processor.demonstrable_compliance = TRUE AND processor.technical_measures = TRUE AND processor.organizational_measures = TRUE
+```
+
+### Processor Agreement
+```dsl
+WHEN processor.engaged = TRUE THEN MUST written_agreement.in_place = TRUE AND agreement.specifies_subject_matter = TRUE AND agreement.duration_specified = TRUE AND agreement.nature_purpose_specified = TRUE
+```
+
+## Specific Processing Scenarios
+
+### Marketing Communications
+```dsl
+WHEN marketing.consent_used = TRUE THEN MUST consent.separate = TRUE AND consent.granular = TRUE AND opt_out_mechanism = TRUE AND easy_withdrawal = TRUE
+```
+
+### Employee Data Processing
+```dsl
+WHEN employee_data.processed = TRUE THEN MUST employment_contract_basis = TRUE AND employee_informed = TRUE AND data_relevant_to_employment = TRUE AND security_measures_implemented = TRUE
+```
+
+### CCTV Processing
+```dsl
+WHEN cctv.used = TRUE THEN MUST signs.displayed = TRUE AND retention_period_specified = TRUE AND access_limited = TRUE AND security_measures_implemented = TRUE
+```
+
+### Health Data Processing
+```dsl
+WHEN health_data.processed = TRUE THEN MUST special_category_condition_met = TRUE AND additional_safeguards = TRUE AND confidentiality_maintained = TRUE AND professional_secrecy_respected = TRUE
+```
+
+## Documentation and Records
+
+### Records of Processing Activities
+```dsl
+WHEN processing_activities.conducted = TRUE THEN MUST records.maintained = TRUE AND records.include_controller_details = TRUE AND records.include_purpose = TRUE AND records.include_data_categories = TRUE AND records.include_recipients = TRUE AND records.include_retention_periods = TRUE AND records.include_security_measures = TRUE
+```
+
+### Data Protection Impact Assessment (DPIA)
+```dsl
+WHEN high_risk_processing = TRUE THEN MUST dpia.conducted = TRUE AND dpia.includes_necessity_assessment = TRUE AND dpia.includes_risk_assessment = TRUE AND dpia.includes_measures_evaluation = TRUE AND dpia.includes_consultation = TRUE AND dpo.consulted = TRUE
+```
+
+## Enforcement and Penalties
+
+### Compliance Monitoring
+```dsl
+WHEN compliance.monitoring = TRUE THEN MUST regular_audits.conducted = TRUE AND effectiveness_reviews.completed = TRUE AND staff_training.completed = TRUE AND incidents.reviewed = TRUE
+```
+
+### Breach Reporting
+```dsl
+WHEN compliance_breach.detected = TRUE THEN MUST internal_reporting.immediate = TRUE AND supervisory_authority.notified WHEN required AND data_subjects.notified WHEN required AND remediation_actions.implemented = TRUE
+```
+
+## Testing Scenarios
+
+### Test Case 1: Valid Consent
+```dsl
+// Input data
+user.consent_given = TRUE
+user.consent_specific = TRUE
+user.consent_informed = TRUE
+user.consent_unambiguous = TRUE
+user.age = 25
+
+// Rule
+WHEN user.age >= 18 THEN MUST user.consent_given = TRUE AND user.consent_specific = TRUE AND user.consent_informed = TRUE AND user.consent_unambiguous = TRUE
+
+// Expected result: TRUE
+```
+
+### Test Case 2: Data Minimization
+```dsl
+// Input data
+data.processing = TRUE
+data.collected_fields = ["name", "email", "phone"]
+necessary_fields = ["name", "email", "phone"]
+
+// Rule
+WHEN data.processing = TRUE THEN MUST data.collected_fields.ONLY_CONTAINS necessary_fields
+
+// Expected result: TRUE
+```
+
+### Test Case 3: Breach Notification
+```dsl
+// Input data
+data_breach.occurred = TRUE
+data_breach.detected_time = "2024-01-15T10:00:00Z"
+supervisory_authority.notified_time = "2024-01-15T12:00:00Z"
+
+// Rule
+WHEN data_breach.occurred = TRUE THEN MUST supervisory_authority.notified WITHIN 72 HOURS
+
+// Expected result: TRUE (notification within 2 hours)
+```
+
+These examples demonstrate how the GlassBox Compliance DSL can be used to express complex GDPR requirements in a human-readable, machine-executable format.

@@ -1,0 +1,227 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "name": "AML Transaction Monitoring",
+    "description": "DecisionBundle for Anti-Money Laundering compliance in financial transactions",
+    "created": "2025-01-15T11:00:00Z",
+    "modified": "2025-01-15T11:00:00Z",
+    "author": "GlassBox Financial Compliance Team",
+    "jurisdiction": "FATF",
+    "domain": "finance",
+    "tags": ["aml", "transaction_monitoring", "financial_crime", "compliance"],
+    "signature": {
+      "algorithm": "RS256",
+      "publicKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...",
+      "value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+  },
+  "rules": [
+    {
+      "id": "rule-aml-001",
+      "name": "Large Cash Transaction",
+      "description": "Flag transactions exceeding $10,000 in cash",
+      "type": "expression",
+      "definition": {
+        "expression": "transaction_type == 'cash' && amount >= 10000",
+        "variables": {
+          "transaction_type": "string",
+          "amount": "number"
+        }
+      },
+      "severity": "high",
+      "category": "transaction_monitoring",
+      "references": [
+        {
+          "type": "regulation",
+          "id": "BSA-Section-5313",
+          "title": "Bank Secrecy Act Section 5313",
+          "url": "https://www.fincen.gov/statutes_regs/bsa/"
+        }
+      ]
+    },
+    {
+      "id": "rule-aml-002",
+      "name": "Suspicious Pattern Detection",
+      "description": "Detect structuring patterns to avoid reporting thresholds",
+      "type": "dsl",
+      "definition": {
+        "dsl": "WHEN customer_transactions THEN IF count_transactions > 5 AND total_amount > 9000 AND max_single_transaction < 10000 THEN FLAG as_structuring",
+        "parameters": {
+          "customer_transactions": "array",
+          "count_transactions": "number",
+          "total_amount": "number",
+          "max_single_transaction": "number"
+        }
+      },
+      "severity": "high",
+      "category": "pattern_detection",
+      "references": [
+        {
+          "type": "regulation",
+          "id": "FATF-Recommendation-20",
+          "title": "FATF Recommendation 20: Suspicious transaction reporting",
+          "url": "https://www.fatf-gafi.org/publications/fatfrecommendations/documents/fatf-recommendations.html"
+        }
+      ]
+    },
+    {
+      "id": "rule-aml-003",
+      "name": "High-Risk Jurisdiction",
+      "description": "Flag transactions with high-risk jurisdictions",
+      "type": "decision_table",
+      "definition": {
+        "table": {
+          "conditions": [
+            {"field": "origin_country", "operator": "in", "value": ["IR", "KP", "SY", "CU", "RU"]},
+            {"field": "destination_country", "operator": "in", "value": ["IR", "KP", "SY", "CU", "RU"]},
+            {"field": "amount", "operator": ">", "value": 5000}
+          ],
+          "actions": [
+            {"result": false, "reason": "Transaction involves high-risk jurisdiction", "risk_score": 0.8}
+          ]
+        }
+      },
+      "severity": "medium",
+      "category": "geographic_risk",
+      "references": [
+        {
+          "type": "standard",
+          "id": "FATF-High-Risk-Countries",
+          "title": "FATF High-Risk Jurisdictions List",
+          "url": "https://www.fatf-gafi.org/publications/high-risk-and-other-monitored-jurisdictions/"
+        }
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "decision-aml-001",
+      "ruleId": "rule-aml-001",
+      "input": {
+        "transaction_type": "cash",
+        "amount": 15000
+      },
+      "output": {
+        "result": false,
+        "confidence": 1.0,
+        "reason": "Large cash transaction exceeding $10,000 threshold",
+        "evidence": [
+          {
+            "type": "log",
+            "id": "transaction-log-001",
+            "content": "Cash transaction of $15,000 detected",
+            "timestamp": "2025-01-15T11:05:00Z"
+          }
+        ]
+      },
+      "timestamp": "2025-01-15T11:05:00Z",
+      "executor": "aml-monitoring-v2.1",
+      "context": {
+        "transaction_id": "txn-789",
+        "customer_id": "cust-456"
+      }
+    },
+    {
+      "id": "decision-aml-002",
+      "ruleId": "rule-aml-002",
+      "input": {
+        "customer_transactions": [
+          {"amount": 2000, "timestamp": "2025-01-15T10:00:00Z"},
+          {"amount": 2500, "timestamp": "2025-01-15T10:15:00Z"},
+          {"amount": 1800, "timestamp": "2025-01-15T10:30:00Z"},
+          {"amount": 2200, "timestamp": "2025-01-15T10:45:00Z"},
+          {"amount": 1500, "timestamp": "2025-01-15T11:00:00Z"},
+          {"amount": 1000, "timestamp": "2025-01-15T11:15:00Z"}
+        ],
+        "count_transactions": 6,
+        "total_amount": 11000,
+        "max_single_transaction": 2500
+      },
+      "output": {
+        "result": false,
+        "confidence": 0.9,
+        "reason": "Potential structuring pattern detected - multiple transactions just below reporting threshold",
+        "evidence": [
+          {
+            "type": "metric",
+            "id": "pattern-analysis-001",
+            "content": "6 transactions totaling $11,000 with max single transaction $2,500",
+            "timestamp": "2025-01-15T11:20:00Z"
+          }
+        ]
+      },
+      "timestamp": "2025-01-15T11:20:00Z",
+      "executor": "aml-monitoring-v2.1",
+      "context": {
+        "customer_id": "cust-789",
+        "analysis_window": "PT1H15M"
+      }
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-aml-001",
+      "type": "log",
+      "content": {
+        "event": "large_cash_transaction",
+        "transaction_id": "txn-789",
+        "amount": 15000,
+        "currency": "USD",
+        "customer_id": "cust-456"
+      },
+      "timestamp": "2025-01-15T11:05:00Z",
+      "source": "transaction-system",
+      "hash": "sha256:ghi789..."
+    },
+    {
+      "id": "evidence-aml-002",
+      "type": "metric",
+      "content": {
+        "analysis_type": "pattern_detection",
+        "customer_id": "cust-789",
+        "transaction_count": 6,
+        "total_amount": 11000,
+        "time_window": "1 hour 15 minutes",
+        "structuring_score": 0.9
+      },
+      "timestamp": "2025-01-15T11:20:00Z",
+      "source": "aml-analytics-engine",
+      "hash": "sha256:jkl012..."
+    }
+  ],
+  "audit": {
+    "created": "2025-01-15T11:00:00Z",
+    "modified": "2025-01-15T11:20:00Z",
+    "version": "1.0",
+    "checksum": "sha256:mno345...",
+    "trail": [
+      {
+        "timestamp": "2025-01-15T11:00:00Z",
+        "action": "bundle_created",
+        "user": "aml-analyst",
+        "details": {
+          "reason": "AML compliance monitoring setup"
+        }
+      },
+      {
+        "timestamp": "2025-01-15T11:05:00Z",
+        "action": "decision_added",
+        "user": "aml-monitoring-v2.1",
+        "details": {
+          "decision_id": "decision-aml-001",
+          "rule_id": "rule-aml-001"
+        }
+      },
+      {
+        "timestamp": "2025-01-15T11:20:00Z",
+        "action": "decision_added",
+        "user": "aml-monitoring-v2.1",
+        "details": {
+          "decision_id": "decision-aml-002",
+          "rule_id": "rule-aml-002"
+        }
+      }
+    ]
+  }
+}

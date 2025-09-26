@@ -1,0 +1,206 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "GDPR Data Processing Compliance",
+    "description": "DecisionBundle for GDPR compliance in data processing operations",
+    "created": "2025-01-15T10:30:00Z",
+    "modified": "2025-01-15T10:30:00Z",
+    "author": "GlassBox Compliance Team",
+    "jurisdiction": "GDPR",
+    "domain": "general",
+    "tags": ["privacy", "data_protection", "gdpr", "consent"],
+    "signature": {
+      "algorithm": "ES256",
+      "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEEVs/o5+uQbTjL3jynfh+Y2FwI7...",
+      "value": "MEUCIAQ9bXJ4o3Z3N5V7g8Y2FwI7X6v5K8J9H7G6F5D4E3C2A1B..."
+    }
+  },
+  "rules": [
+    {
+      "id": "rule-gdpr-001",
+      "name": "Lawful Basis for Processing",
+      "description": "Verify that all data processing has a lawful basis under GDPR Article 6",
+      "type": "dsl",
+      "definition": {
+        "dsl": "WHEN processing_data THEN MUST have_lawful_basis IN [consent, contract, legal_obligation, vital_interests, public_task, legitimate_interests]",
+        "parameters": {
+          "processing_data": "boolean",
+          "have_lawful_basis": "string"
+        }
+      },
+      "severity": "high",
+      "category": "data_protection",
+      "references": [
+        {
+          "type": "regulation",
+          "id": "GDPR-Article-6",
+          "title": "GDPR Article 6: Lawfulness of processing",
+          "url": "https://gdpr-info.eu/art-6-gdpr/"
+        }
+      ]
+    },
+    {
+      "id": "rule-gdpr-002",
+      "name": "Data Subject Consent",
+      "description": "Verify that consent is freely given, specific, informed, and unambiguous",
+      "type": "expression",
+      "definition": {
+        "expression": "consent_given && consent_specific && consent_informed && consent_unambiguous",
+        "variables": {
+          "consent_given": "boolean",
+          "consent_specific": "boolean",
+          "consent_informed": "boolean",
+          "consent_unambiguous": "boolean"
+        }
+      },
+      "severity": "high",
+      "category": "consent",
+      "references": [
+        {
+          "type": "regulation",
+          "id": "GDPR-Article-7",
+          "title": "GDPR Article 7: Conditions for consent",
+          "url": "https://gdpr-info.eu/art-7-gdpr/"
+        }
+      ]
+    },
+    {
+      "id": "rule-gdpr-003",
+      "name": "Data Minimization",
+      "description": "Ensure that only necessary data is collected and processed",
+      "type": "decision_table",
+      "definition": {
+        "table": {
+          "conditions": [
+            {"field": "data_collected", "operator": "contains", "value": "unnecessary"},
+            {"field": "data_processed", "operator": "exceeds", "value": "necessary"}
+          ],
+          "actions": [
+            {"result": false, "reason": "Data minimization principle violated"}
+          ]
+        }
+      },
+      "severity": "medium",
+      "category": "data_protection",
+      "references": [
+        {
+          "type": "regulation",
+          "id": "GDPR-Article-5",
+          "title": "GDPR Article 5: Principles relating to processing of personal data",
+          "url": "https://gdpr-info.eu/art-5-gdpr/"
+        }
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "decision-001",
+      "ruleId": "rule-gdpr-001",
+      "input": {
+        "processing_data": true,
+        "have_lawful_basis": "consent"
+      },
+      "output": {
+        "result": true,
+        "confidence": 0.95,
+        "reason": "Data processing has lawful basis (consent)",
+        "evidence": [
+          {
+            "type": "document",
+            "id": "consent-form-001",
+            "content": "User consent form dated 2025-01-10",
+            "timestamp": "2025-01-10T14:30:00Z"
+          }
+        ]
+      },
+      "timestamp": "2025-01-15T10:35:00Z",
+      "executor": "compliance-engine-v1.0",
+      "context": {
+        "user_id": "user-123",
+        "session_id": "session-456"
+      }
+    },
+    {
+      "id": "decision-002",
+      "ruleId": "rule-gdpr-002",
+      "input": {
+        "consent_given": true,
+        "consent_specific": true,
+        "consent_informed": true,
+        "consent_unambiguous": true
+      },
+      "output": {
+        "result": true,
+        "confidence": 1.0,
+        "reason": "All consent requirements met",
+        "evidence": [
+          {
+            "type": "user_input",
+            "id": "consent-confirmation",
+            "content": "User confirmed consent with all checkboxes checked",
+            "timestamp": "2025-01-10T14:30:00Z"
+          }
+        ]
+      },
+      "timestamp": "2025-01-15T10:36:00Z",
+      "executor": "compliance-engine-v1.0",
+      "context": {
+        "user_id": "user-123",
+        "consent_form_id": "form-001"
+      }
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-001",
+      "type": "document",
+      "content": {
+        "document_type": "privacy_policy",
+        "version": "2.1",
+        "url": "/privacy-policy-v2.1.pdf"
+      },
+      "timestamp": "2025-01-10T10:00:00Z",
+      "source": "document-management-system",
+      "hash": "sha256:abc123..."
+    },
+    {
+      "id": "evidence-002",
+      "type": "log",
+      "content": {
+        "event": "consent_given",
+        "user_id": "user-123",
+        "ip_address": "192.168.1.100",
+        "user_agent": "Mozilla/5.0..."
+      },
+      "timestamp": "2025-01-10T14:30:00Z",
+      "source": "application-logs",
+      "hash": "sha256:def456..."
+    }
+  ],
+  "audit": {
+    "created": "2025-01-15T10:30:00Z",
+    "modified": "2025-01-15T10:36:00Z",
+    "version": "1.0",
+    "checksum": "sha256:789abc...",
+    "trail": [
+      {
+        "timestamp": "2025-01-15T10:30:00Z",
+        "action": "bundle_created",
+        "user": "compliance-officer",
+        "details": {
+          "reason": "Initial GDPR compliance assessment"
+        }
+      },
+      {
+        "timestamp": "2025-01-15T10:36:00Z",
+        "action": "decision_added",
+        "user": "compliance-engine",
+        "details": {
+          "decision_id": "decision-002",
+          "rule_id": "rule-gdpr-002"
+        }
+      }
+    ]
+  }
+}

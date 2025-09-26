@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 2000 1700">
+  <defs>
+    <style>
+      .cube-edge {
+        stroke-width: 3;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      
+      .glow {
+        filter: url(#glow-filter);
+      }
+      
+      .pulse {
+        animation: pulse 2s ease-in-out infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+      }
+      
+      @keyframes flow {
+        0% { stroke-dashoffset: 0; }
+        100% { stroke-dashoffset: -100; }
+      }
+      
+      .audit-trail {
+        stroke-dasharray: 10 5;
+        animation: flow 2s linear infinite;
+      }
+      
+      .cube-face {
+        fill-opacity: 0.1;
+        stroke-width: 1;
+      }
+    </style>
+    
+    <!-- 发光滤镜 -->
+    <filter id="glow-filter" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- 渐变定义 -->
+    <linearGradient id="deepBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#001f3f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#003366;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="silver" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#c0c0c0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e8e8e8;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="neonGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ff88;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00cc66;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect width="2000" height="1700" fill="#f8f9fa"/>
+  
+  <g transform="translate(1000, 850)">
+    <!-- 玻璃立方体 -->
+    <g class="glow pulse">
+      <!-- 立方体的三个可见面 -->
+      <!-- 顶面 -->
+      <path d="M -200,-150 L 200,-150 L 400,0 L 0,0 Z" 
+            class="cube-face" 
+            stroke="url(#silver)" 
+            fill="url(#silver)"/>
+      
+      <!-- 左面 -->
+      <path d="M -200,-150 L 0,0 L 0,300 L -200,150 Z" 
+            class="cube-face" 
+            stroke="url(#deepBlue)" 
+            fill="url(#deepBlue)"/>
+      
+      <!-- 右面 -->
+      <path d="M 200,-150 L 400,0 L 400,300 L 200,150 Z" 
+            class="cube-face" 
+            stroke="url(#deepBlue)" 
+            fill="url(#deepBlue)"/>
+      
+      <!-- 发光边缘 -->
+      <path d="M -200,-150 L 200,-150 L 400,0 L 400,300 L 200,150 L 0,300 L -200,150 L 0,0 Z" 
+            class="cube-edge" 
+            stroke="url(#neonGreen)"/>
+      
+      <!-- 内部结构线 -->
+      <line x1="0" y1="0" x2="200" y2="-150" class="cube-edge" stroke="url(#silver)" stroke-width="2"/>
+      <line x1="0" y1="0" x2="400" y2="0" class="cube-edge" stroke="url(#silver)" stroke-width="2"/>
+      <line x1="0" y1="0" x2="200" y2="150" class="cube-edge" stroke="url(#silver)" stroke-width="2"/>
+      <line x1="0" y1="0" x2="-200" y2="150" class="cube-edge" stroke="url(#silver)" stroke-width="2"/>
+      
+      <!-- 审计轨迹线 -->
+      <path d="M -180,-130 Q -100,-100 0,-80 Q 100,-60 180,-40" 
+            class="audit-trail" 
+            stroke="url(#neonGreen)" 
+            stroke-width="2" 
+            fill="none"/>
+      
+      <path d="M -180,130 Q -100,100 0,80 Q 100,60 180,40" 
+            class="audit-trail" 
+            stroke="url(#neonGreen)" 
+            stroke-width="2" 
+            fill="none"/>
+      
+      <path d="M 20,-20 Q 60,20 100,60 Q 140,100 180,140" 
+            class="audit-trail" 
+            stroke="url(#neonGreen)" 
+            stroke-width="2" 
+            fill="none"/>
+      
+      <!-- 中心发光点 -->
+      <circle cx="0" cy="0" r="8" fill="url(#neonGreen)" class="pulse">
+        <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+  </g>
+</svg>

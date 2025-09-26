@@ -1,0 +1,105 @@
+name: JavaScript SDK
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: 
+      - 'sdks/js/**'
+  pull_request:
+    branches: [ main ]
+    paths: 
+      - 'sdks/js/**'
+
+jobs:
+  test-js:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [16, 18, 20]
+        
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: 'sdks/js/package-lock.json'
+        
+    - name: Install dependencies
+      run: |
+        cd sdks/js
+        npm ci
+        
+    - name: Lint with ESLint
+      run: |
+        cd sdks/js
+        npm run lint
+        
+    - name: Format check with Prettier
+      run: |
+        cd sdks/js
+        npm run format:check
+        
+    - name: Type check
+      run: |
+        cd sdks/js
+        npm run type-check
+        
+    - name: Test with Jest
+      run: |
+        cd sdks/js
+        npm test -- --coverage --coverage-reporters=text-lcov | tee coverage.txt
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./sdks/js/coverage.txt
+        flags: javascript
+        name: codecov-umbrella
+        
+    - name: Build package
+      run: |
+        cd sdks/js
+        npm run build
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: js-sdk-build-${{ matrix.os }}-${{ matrix.node-version }}
+        path: sdks/js/dist/
+
+  publish-js:
+    needs: test-js
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        registry-url: 'https://registry.npmjs.org'
+        
+    - name: Install dependencies
+      run: |
+        cd sdks/js
+        npm ci
+        
+    - name: Build package
+      run: |
+        cd sdks/js
+        npm run build
+        
+    - name: Publish to npm
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: |
+        cd sdks/js
+        npm publish

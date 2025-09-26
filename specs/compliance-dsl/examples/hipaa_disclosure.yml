@@ -1,0 +1,250 @@
+# Healthcare Compliance DSL Examples
+
+This file contains specific examples of Compliance DSL rules for healthcare regulatory compliance, including HIPAA, HITECH, and other healthcare regulations.
+
+## HIPAA Privacy Rule
+
+### Protected Health Information (PHI) Access
+```dsl
+WHEN phi.access_requested = TRUE THEN MUST user.authorized = TRUE AND user.role_has_access = TRUE AND phi.minimum_necessary = TRUE AND access.log_created = TRUE AND access.purpose_documented = TRUE
+```
+
+### Use and Disclosure of PHI
+```dsl
+WHEN phi.disclosed = TRUE THEN MUST disclosure.authorized = TRUE AND disclosure.minimum_necessary = TRUE AND disclosure.purpose_treatment = TRUE OR disclosure.purpose_payment = TRUE OR disclosure.purpose_operations = TRUE OR authorization.obtained = TRUE
+```
+
+### Patient Rights - Access to PHI
+```dsl
+WHEN patient.access_request = TRUE THEN MUST request.processed WITHIN 30 DAYS AND access.granted = TRUE AND phi_format_requested_provided = TRUE AND fee_disclosed WHEN applicable
+```
+
+### Patient Rights - Accounting of Disclosures
+```dsl
+WHEN patient.accounting_request = TRUE THEN MUST accounting.provided WITHIN 60 DAYS AND accounting.last_6_years = TRUE AND accounting.includes_all_disclosures = TRUE AND accounting.excludes_treatment_disclosures = TRUE
+```
+
+### Patient Rights - Amendment of PHI
+```dsl
+WHEN patient.amendment_request = TRUE THEN MUST request.reviewed = TRUE AND amendment.accepted OR amendment.denied_with_reason = TRUE AND patient.notified WITHIN 60 DAYS AND denial_appeal_process_explained = TRUE
+```
+
+### Patient Rights - Restriction Requests
+```dsl
+WHEN patient.restriction_requested = TRUE THEN MUST restriction.agreed_to OR restriction.denied = TRUE AND denial_reason_provided = TRUE AND restriction_agreement_documented WHEN agreed
+```
+
+## HIPAA Security Rule
+
+### Administrative Safeguards
+```dsl
+WHEN security.admin_controls = TRUE THEN MUST security_policy.established = TRUE AND security_officer.appointed = TRUE AND workforce.training_completed = TRUE AND risk_analysis.conducted = TRUE AND risk_management.implemented = TRUE
+```
+
+### Technical Safeguards - Access Control
+```dsl
+WHEN system.access_granted = TRUE THEN MUST unique_user_id.assigned = TRUE AND emergency_access_procedure = TRUE AND automatic_logoff.enabled = TRUE AND encryption_and_decryption = TRUE
+```
+
+### Technical Safeguards - Audit Controls
+```dsl
+WHEN phi.accessed = TRUE THEN MUST audit_log.created = TRUE AND audit_log.includes_user = TRUE AND audit_log.includes_timestamp = TRUE AND audit_log.includes_action = TRUE AND audit_log.retained = TRUE
+```
+
+### Technical Safeguards - Integrity
+```dsl
+WHEN phi.transmitted = TRUE THEN MUST data_integrity_protected = TRUE AND electronic_signature_used = TRUE AND transmission_error_detected = TRUE AND data_corruption_prevented = TRUE
+```
+
+### Technical Safeguards - Transmission Security
+```dsl
+WHEN phi.transmitted_electronically = TRUE THEN MUST encryption.in_transit = TRUE AND integrity_controls.implemented = TRUE AND authentication.sender = TRUE AND authentication.receiver = TRUE
+```
+
+### Physical Safeguards
+```dsl
+WHEN facility.contains_phi = TRUE THEN MUST facility_access_controls = TRUE AND workstation_use_policy = TRUE AND workstation_security = TRUE AND device_media_controls = TRUE
+```
+
+## HITECH Act
+
+### Breach Notification
+```dsl
+WHEN data_breach.occurred = TRUE THEN MUST breach_assessment.conducted = TRUE AND affected_individuals.notified WITHIN 60 DAYS AND hhs.notified WHEN >500_individuals AND media_notified WHEN >500_residents
+```
+
+### Meaningful Use Requirements
+```dsl
+WHEN ehr.certified = TRUE THEN MUST meaningful_use.core_measures_met = TRUE AND meaningful_use.menu_measures_met = TRUE AND quality_data_reported = TRUE AND security_risk_analysis_conducted = TRUE
+```
+
+### Business Associate Agreements
+```dsl
+WHEN business_associate.engaged = TRUE THEN MUST baa.signed = TRUE AND baa.includes_phi_protection = TRUE AND baa.includes_reporting_requirements = TRUE AND baa.includes_termination_provisions = TRUE
+```
+
+## Clinical Research Compliance
+
+### Informed Consent
+```dsl
+WHEN research.subject_enrolled = TRUE THEN MUST informed_consent.obtained = TRUE AND consent.document_signed = TRUE AND consent.process_documented = TRUE AND consent.witnessed = TRUE
+```
+
+### IRB Approval
+```dsl
+WHEN research.study_conducted = TRUE THEN MUST irb.approval_obtained = TRUE AND irb.review_annual = TRUE AND protocol.approved = TRUE AND amendments.approved = TRUE
+```
+
+### Good Clinical Practice (GCP)
+```dsl
+WHEN clinical_trial.conducted = TRUE THEN MUST gcp.compliance = TRUE AND protocol_followed = TRUE AND adverse_events_reported = TRUE AND data_quality_assured = TRUE
+```
+
+### Data Privacy in Research
+```dsl
+WHEN research.uses_phi = TRUE THEN MUST phi.de_identified = TRUE OR authorization.obtained = TRUE AND irb.waiver_granted = TRUE AND data_protection_plan = TRUE
+```
+
+## Drug and Device Compliance
+
+### FDA Adverse Event Reporting
+```dsl
+WHEN adverse_event.detected = TRUE THEN MUST medwatch.filed WITHIN 15 DAYS WHEN serious AND medwatch.filed WITHIN 30 DAYS WHEN non_serious AND all_required_fields_completed = TRUE
+```
+
+### Clinical Trial Registration
+```dsl
+WHEN clinical_trial.initiated = TRUE THEN MUST clinicaltrials.gov.registered = TRUE AND registration.completed WITHIN 21 DAYS AND results_submitted WHEN required
+```
+
+### Drug Supply Chain Security Act (DSCSA)
+```dsl
+WHEN pharmaceutical.distributed = TRUE THEN MUST product_traced = TRUE AND product_identified = TRUE AND transaction_information_exchanged = TRUE AND transaction_history_maintained = TRUE
+```
+
+### Medical Device Reporting (MDR)
+```dsl
+WHEN device.adverse_event = TRUE THEN MUST mdr_report.filed = TRUE AND report.filed WITHIN 30 DAYS AND manufacturer_notified = TRUE AND user_facility_report = TRUE
+```
+
+## Laboratory Compliance
+
+### CLIA Certification
+```dsl
+WHEN laboratory.test_performed = TRUE THEN MUST clia.certificate_current = TRUE AND test.performed_by_certified_personnel = TRUE AND quality_control_performed = TRUE AND proficiency_testing_completed = TRUE
+```
+
+### Laboratory Developed Tests (LDTs)
+```dsl
+WHEN ldt.used = TRUE THEN MUST validation.studies_completed = TRUE AND analytical_performance.established = TRUE AND clinical_validity.established = TRUE AND quality_control_implemented = TRUE
+```
+
+### Genetic Information Nondiscrimination Act (GINA)
+```dsl
+WHEN genetic_information.collected = TRUE THEN MUST gina.compliance = TRUE AND genetic_information_not_used_for_employment = TRUE AND genetic_information_not_used_for_insurance = TRUE AND authorization.obtained = TRUE
+```
+
+## Telehealth Compliance
+
+### Telehealth Privacy
+```dsl
+WHEN telehealth.session_conducted = TRUE THEN MUST platform.hipaa_compliant = TRUE AND session.encrypted = TRUE AND authentication.multi_factor = TRUE AND privacy_notice_provided = TRUE
+```
+
+### Cross-State Licensing
+```dsl
+WHEN telehealth.cross_state = TRUE THEN MUST provider.licensed_in_patient_state = TRUE OR license.compact_member = TRUE OR emergency_exception = TRUE AND state_compliance_verified = TRUE
+```
+
+### Informed Consent for Telehealth
+```dsl
+WHEN telehealth.service_provided = TRUE THEN MUST telehealth_consent.obtained = TRUE AND consent.includes_technology_risks = TRUE AND consent.includes_privacy_risks = TRUE AND consent.includes_alternatives = TRUE
+```
+
+## Emergency Preparedness
+
+### Emergency Access
+```dsl
+WHEN emergency.declared = TRUE THEN MUST emergency_access_procedure = TRUE AND access_granted_to_authorized_personnel = TRUE AND emergency_access_logged = TRUE AND access_limited_to_necessary_phi = TRUE
+```
+
+### Disaster Recovery
+```dsl
+WHEN disaster_recovery_test.conducted = TRUE THEN MUST recovery_time_objective.met = TRUE AND recovery_point_objective.met = TRUE AND data_backup_restored = TRUE AND system_functionality_restored = TRUE
+```
+
+### Contingency Planning
+```dsl
+WHEN contingency_plan.active = TRUE THEN MUST data_backup_plan = TRUE AND disaster_recovery_plan = TRUE AND emergency_mode_operation_plan = TRUE AND testing_procedures = TRUE
+```
+
+## Testing Scenarios
+
+### Test Case 1: HIPAA PHI Access
+```dsl
+// Input data
+phi.access_requested = TRUE
+user.authorized = TRUE
+user.role_has_access = TRUE
+phi.minimum_necessary = TRUE
+access.log_created = TRUE
+access.purpose_documented = TRUE
+
+// Rule
+WHEN phi.access_requested = TRUE THEN MUST user.authorized = TRUE AND user.role_has_access = TRUE AND phi.minimum_necessary = TRUE AND access.log_created = TRUE AND access.purpose_documented = TRUE
+
+// Expected result: TRUE
+```
+
+### Test Case 2: Breach Notification
+```dsl
+// Input data
+data_breach.occurred = TRUE
+data_breach.detected_time = "2024-01-15T10:00:00Z"
+affected_individuals.notified_time = "2024-01-15T12:00:00Z"
+affected_individuals.count = 250
+
+// Rule
+WHEN data_breach.occurred = TRUE THEN MUST breach_assessment.conducted = TRUE AND affected_individuals.notified WITHIN 60 DAYS AND hhs.notified WHEN >500_individuals AND media_notified WHEN >500_residents
+
+// Expected result: TRUE (notification within 2 hours, <500 individuals)
+```
+
+### Test Case 3: Clinical Trial Informed Consent
+```dsl
+// Input data
+research.subject_enrolled = TRUE
+informed_consent.obtained = TRUE
+consent.document_signed = TRUE
+consent.process_documented = TRUE
+consent.witnessed = TRUE
+
+// Rule
+WHEN research.subject_enrolled = TRUE THEN MUST informed_consent.obtained = TRUE AND consent.document_signed = TRUE AND consent.process_documented = TRUE AND consent.witnessed = TRUE
+
+// Expected result: TRUE
+```
+
+## Advanced Patterns
+
+### Complex Risk Assessment
+```dsl
+WHEN patient.data_sensitivity = "high" AND user.access_level = "limited" AND access.purpose = "research" THEN MUST additional_approval_required = TRUE AND phi.de_identified = TRUE AND access_time_limited = TRUE AND audit_enhanced = TRUE
+```
+
+### Temporal Access Controls
+```dsl
+WHEN user.access_after_hours = TRUE AND user.not_emergency_personnel = TRUE AND phi.sensitivity = "high" THEN MUST access.denied = TRUE AND security_alert_generated = TRUE AND supervisor_notified = TRUE AND access_logged = TRUE
+```
+
+### Network Security Monitoring
+```dsl
+WHEN network.anomaly_detected = TRUE AND system.contains_phi = TRUE AND anomaly.severity = "high" THEN MUST system.quarantined = TRUE AND security_team_alerted = TRUE AND incident_response_initiated = TRUE AND backup_system_activated = TRUE
+```
+
+### Data Integrity Verification
+```dsl
+WHEN phi.modified = TRUE AND modification.not_authorized = TRUE AND modification.signature_invalid = TRUE THEN MUST change.reverted = TRUE AND security_incident_reported = TRUE AND audit_investigation_initiated = TRUE AND data_restored = TRUE
+```
+
+These examples demonstrate how the GlassBox Compliance DSL can be used to express complex healthcare regulatory requirements in a human-readable, machine-executable format.

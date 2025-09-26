@@ -1,0 +1,95 @@
+name: Java SDK
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths: 
+      - 'sdks/java/**'
+  pull_request:
+    branches: [ main ]
+    paths: 
+      - 'sdks/java/**'
+
+jobs:
+  test-java:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        java-version: [11, 17, 21]
+        
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Set up Java ${{ matrix.java-version }}
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: 'temurin'
+        cache: 'maven'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('sdks/java/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-m2-
+          
+    - name: Run Maven verify
+      run: |
+        cd sdks/java
+        mvn -B clean verify
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./sdks/java/target/site/jacoco/jacoco.xml
+        flags: java
+        name: codecov-umbrella
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: java-sdk-build-${{ matrix.os }}-${{ matrix.java-version }}
+        path: |
+          sdks/java/target/*.jar
+          sdks/java/target/site/
+
+  publish-java:
+    needs: test-java
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        server-id: ossrh
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+        gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('sdks/java/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-m2-
+          
+    - name: Deploy to Maven Central
+      env:
+        MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+        MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+        MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      run: |
+        cd sdks/java
+        mvn -B clean deploy -P release

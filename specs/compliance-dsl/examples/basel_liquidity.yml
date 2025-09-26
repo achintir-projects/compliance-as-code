@@ -1,0 +1,225 @@
+# Financial Compliance DSL Examples
+
+This file contains specific examples of Compliance DSL rules for financial regulatory compliance, including AML, KYC, and banking regulations.
+
+## Anti-Money Laundering (AML) Rules
+
+### Large Cash Transaction Reporting
+```dsl
+WHEN transaction.type = "cash" AND transaction.amount >= 10000 THEN MUST transaction.reported_to_fincen = TRUE AND transaction.suspicious_activity_flagged = TRUE AND compliance_team.notified = TRUE
+```
+
+### Structuring Detection (Smurfing)
+```dsl
+WHEN customer.transactions_count > 5 AND customer.total_amount > 9000 AND customer.max_single_transaction < 10000 AND customer.time_window <= 24 HOURS THEN MUST customer.flagged_as_structuring = TRUE AND sar_filed = TRUE AND investigation_initiated = TRUE
+```
+
+### High-Risk Jurisdiction Monitoring
+```dsl
+WHEN transaction.origin_country IN ["IR", "KP", "SY", "CU", "RU", "MM"] OR transaction.destination_country IN ["IR", "KP", "SY", "CU", "RU", "MM"] THEN MUST transaction.enhanced_due_diligence = TRUE AND transaction.approved_by_compliance = TRUE AND transaction.monitored_continuously = TRUE
+```
+
+### Suspicious Activity Pattern Detection
+```dsl
+WHEN transaction.frequency_abnormal = TRUE AND transaction.amount_pattern_irregular = TRUE AND transaction.geographic_pattern_suspicious = TRUE THEN MUST transaction.flagged_as_suspicious = TRUE AND sar_deadline_30_days = TRUE AND investigation_priority_high = TRUE
+```
+
+### Politically Exposed Persons (PEP) Screening
+```dsl
+WHEN customer.is_pep = TRUE THEN MUST customer.enhanced_diligence = TRUE AND customer.senior_management_approval = TRUE AND customer.ongoing_monitoring = TRUE AND customer.source_of_funds_verified = TRUE
+```
+
+## Know Your Customer (KYC) Rules
+
+### Customer Identification Program (CIP)
+```dsl
+WHEN customer.onboarding = TRUE THEN MUST customer.identification_verified = TRUE AND customer.identity_documents_collected = TRUE AND customer.identity_validated = TRUE AND customer.risk_assessment_completed = TRUE
+```
+
+### Customer Due Diligence (CDD)
+```dsl
+WHEN customer.account_opened = TRUE THEN MUST customer.basic_diligence = TRUE AND customer.identity_verified = TRUE AND customer.business_purpose_understood = TRUE AND customer.risk_profile_assessed = TRUE
+```
+
+### Enhanced Due Diligence (EDD)
+```dsl
+WHEN customer.risk_level = "high" THEN MUST customer.enhanced_diligence = TRUE AND customer.source_of_funds_documented = TRUE AND customer.source_of_wealth_verified = TRUE AND customer.beneficial_ownership_identified = TRUE AND customer.ongoing_monitoring_enhanced = TRUE
+```
+
+### Beneficial Ownership Verification
+```dsl
+WHEN entity.account_opened = TRUE THEN MUST beneficial_owners.identifed = TRUE AND beneficial_owners.ownership_percentage >= 25% AND beneficial_owners.identity_verified = TRUE AND beneficial_owners.risk_assessed = TRUE
+```
+
+### Ongoing Monitoring
+```dsl
+WHEN customer.account_active = TRUE THEN MUST customer.activity_monitored = TRUE AND customer.transactions_screened = TRUE AND customer.watchlist_checked = TRUE AND customer.profile_updated = TRUE
+```
+
+## Banking Regulations
+
+### Truth in Lending Act (TILA)
+```dsl
+WHEN loan.originated = TRUE THEN MUST loan.apr_disclosed = TRUE AND loan.finance_charge_disclosed = TRUE AND loan.payment_schedule_disclosed = TRUE AND loan.total_payments_disclosed = TRUE
+```
+
+### Equal Credit Opportunity Act (ECOA)
+```dsl
+WHEN credit.application_received = TRUE THEN MUST applicant.not_discriminated = TRUE AND application.decision_based_on_creditworthiness = TRUE AND adverse_notice_provided WHEN declined AND notification_timely = TRUE
+```
+
+### Bank Secrecy Act (BSA)
+```dsl
+WHEN bank.operates = TRUE THEN MUST bsa.compliance_program = TRUE AND bsa.officer_appointed = TRUE AND bsa.training_conducted = TRUE AND bsa.independent_testing = TRUE AND bsa.audit_trail_maintained = TRUE
+```
+
+### Office of Foreign Assets Control (OFAC)
+```dsl
+WHEN transaction.initiated = TRUE THEN MUST parties.ofac_screened = TRUE AND transaction.not_blocked = TRUE AND license_obtained WHEN required AND reporting_completed WHEN required
+```
+
+## Securities Regulations
+
+### Insider Trading Prevention
+```dsl
+WHEN employee.trades_company_securities = TRUE THEN MUST trade.pre_cleared = TRUE AND trade.window_compliant = TRUE AND trade.not_material_non_public = TRUE AND trade.reported = TRUE
+```
+
+### Market Manipulation Detection
+```dsl
+WHEN trading.pattern_suspicious = TRUE AND trading.volume_abnormal = TRUE AND trading.price_movement_irregular = TRUE THEN MUST trading.flagged_for_review = TRUE AND investigation_initiated = TRUE AND regulatory_report_filed = TRUE
+```
+
+### Best Execution
+```dsl
+WHEN order.executed = TRUE THEN MUST execution.price_reasonable = TRUE AND execution.timing_appropriate = TRUE AND execution.venue_competitive = TRUE AND execution.disclosed_to_client = TRUE
+```
+
+## Risk Management
+
+### Credit Risk Assessment
+```dsl
+WHEN credit.application_approved = TRUE THEN MUST applicant.credit_score >= minimum_required AND applicant.debt_to_income <= maximum_allowed AND applicant.employment_stable = TRUE AND applicant.collateral_sufficient = TRUE
+```
+
+### Market Risk Limits
+```dsl
+WHEN trading.position_opened = TRUE THEN MUST position.value <= position_limit AND position.risk_score <= risk_limit AND position.concentration <= concentration_limit AND position.liquidity_sufficient = TRUE
+```
+
+### Operational Risk Controls
+```dsl
+WHEN critical_process.executed = TRUE THEN MUST process.segregation_of_duties = TRUE AND process.approvals_obtained = TRUE AND process.reconciliation_completed = TRUE AND process.exception_documented = TRUE
+```
+
+## Sanctions Compliance
+
+### Sanctions Screening
+```dsl
+WHEN customer.onboarded OR transaction.initiated THEN MUST all_parties.sanctions_screened = TRUE AND screening.current_lists = TRUE AND screening.fuzzy_matching = TRUE AND false_positive_reviewed = TRUE
+```
+
+### Embargo Compliance
+```dsl
+WHEN transaction.involves_embargoed_country = TRUE THEN MUST transaction.blocked = TRUE AND compliance_notified = TRUE AND report_filed = TRUE AND investigation_conducted = TRUE
+```
+
+## Transaction Monitoring
+
+### Wire Transfer Rules
+```dsl
+WHEN transfer.type = "wire" AND transfer.amount >= 3000 THEN MUST transfer.originator_info_complete = TRUE AND transfer.beneficiary_info_complete = TRUE AND transfer.travel_rule_compliant = TRUE
+```
+
+### Credit Card Fraud Detection
+```dsl
+WHEN card.transaction_velocity_high = TRUE AND card.geographic_pattern_irregular = TRUE AND card.amount_unusual = TRUE THEN MUST card.transaction_blocked = TRUE AND customer_notified = TRUE AND fraud_investigation_initiated = TRUE
+```
+
+### Account Takeover Detection
+```dsl
+WHEN login.failed_attempts >= 5 AND login.geographic_location_changed AND login.device_new THEN MUST account.locked = TRUE AND customer_notified = TRUE AND security_team_alerted = TRUE AND verification_required = TRUE
+```
+
+## Reporting Requirements
+
+### Suspicious Activity Report (SAR)
+```dsl
+WHEN suspicious_activity.detected = TRUE THEN MUST sar.filed WITHIN 30 DAYS AND sar.narrative_complete = TRUE AND sar.supporting_documentation = TRUE AND sar.quality_reviewed = TRUE
+```
+
+### Currency Transaction Report (CTR)
+```dsl
+WHEN cash_transaction.amount >= 10000 THEN MUST ctr.filed = TRUE AND ctr.multiple_transactions_aggregated = TRUE AND ctr.filed_within_15_days = TRUE AND ctr.information_complete = TRUE
+```
+
+### Form 8300 (Cash Payments)
+```dsl
+WHEN cash_payment.received >= 10000 THEN MUST form_8300.filed = TRUE AND form_8300.filed_within_15_days = TRUE AND payer_identified = TRUE AND payment_description_complete = TRUE
+```
+
+## Testing Scenarios
+
+### Test Case 1: AML Large Transaction
+```dsl
+// Input data
+transaction.type = "cash"
+transaction.amount = 15000
+transaction.reported_to_fincen = TRUE
+transaction.suspicious_activity_flagged = TRUE
+compliance_team.notified = TRUE
+
+// Rule
+WHEN transaction.type = "cash" AND transaction.amount >= 10000 THEN MUST transaction.reported_to_fincen = TRUE AND transaction.suspicious_activity_flagged = TRUE AND compliance_team.notified = TRUE
+
+// Expected result: TRUE
+```
+
+### Test Case 2: KYC Customer Onboarding
+```dsl
+// Input data
+customer.onboarding = TRUE
+customer.identification_verified = TRUE
+customer.identity_documents_collected = TRUE
+customer.identity_validated = TRUE
+customer.risk_assessment_completed = TRUE
+
+// Rule
+WHEN customer.onboarding = TRUE THEN MUST customer.identification_verified = TRUE AND customer.identity_documents_collected = TRUE AND customer.identity_validated = TRUE AND customer.risk_assessment_completed = TRUE
+
+// Expected result: TRUE
+```
+
+### Test Case 3: PEP Enhanced Due Diligence
+```dsl
+// Input data
+customer.is_pep = TRUE
+customer.enhanced_diligence = TRUE
+customer.senior_management_approval = TRUE
+customer.ongoing_monitoring = TRUE
+customer.source_of_funds_verified = TRUE
+
+// Rule
+WHEN customer.is_pep = TRUE THEN MUST customer.enhanced_diligence = TRUE AND customer.senior_management_approval = TRUE AND customer.ongoing_monitoring = TRUE AND customer.source_of_funds_verified = TRUE
+
+// Expected result: TRUE
+```
+
+## Advanced Patterns
+
+### Complex Risk Scoring
+```dsl
+WHEN customer.risk_factors.aml_score > 70 OR customer.risk_factors.fraud_score > 80 OR customer.risk_factors.sanctions_score > 90 THEN MUST customer.risk_level = "high" AND customer.enhanced_monitoring = TRUE AND customer.quarterly_review = TRUE
+```
+
+### Temporal Pattern Analysis
+```dsl
+WHEN transaction.frequency_24h > 10 AND transaction.frequency_7d > 50 AND transaction.amount_growth_rate > 200% THEN MUST transaction.flagged_as_suspicious = TRUE AND immediate_investigation = TRUE AND account_temporarily_frozen = TRUE
+```
+
+### Network Analysis
+```dsl
+WHEN customer.connected_parties > 5 AND customer.shared_devices > 3 AND customer.similar_ip_addresses > 2 THEN MUST customer.flagged_as_network = TRUE AND enhanced_investigation = TRUE AND relationship_mapping_created = TRUE
+```
+
+These examples demonstrate how the GlassBox Compliance DSL can be used to express complex financial regulatory requirements in a human-readable, machine-executable format.

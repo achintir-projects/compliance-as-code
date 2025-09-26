@@ -1,0 +1,2662 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Core Tenant Management
+model Tenant {
+  id            String   @id @default(cuid())
+  name          String
+  domain        String   @unique
+  status        TenantStatus @default(ACTIVE)
+  config        Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  users         User[]
+  agentPacks    AgentPack[]
+  deployments   Deployment[]
+  workflows     Workflow[]
+  auditLogs     AuditLog[]
+  dataSources   DataSource[]
+  dataIngestions DataIngestion[]
+  agents        Agent[]
+  decisionBundles DecisionBundle[]
+  complianceRules ComplianceRule[]
+  complianceBundles ComplianceBundle[]
+  workflowExecutions WorkflowExecution[]
+  financialTransactions FinancialTransaction[]
+  complianceReports ComplianceReport[]
+  customerProfiles CustomerProfile[]
+  fraudSignals   FraudSignal[]
+  metrics        Metric[]
+  marketplacePurchases MarketplacePurchase[]
+  knowledgeObjects KnowledgeObject[]
+  consentObjects ConsentObject[]
+  subjectRightsRequests SubjectRightsRequest[]
+  dataErasureLogs DataErasureLog[]
+  dataRectificationLogs DataRectificationLog[]
+  adversarialTestExecutions AdversarialTestExecution[]
+  adversarialTestReports AdversarialTestReport[]
+  chaosTestScenarios ChaosTestScenario[]
+  chaosTestExecutions ChaosTestExecution[]
+  chaosTestReports ChaosTestReport[]
+  complianceSLAs ComplianceSLA[]
+  slaMeasurements SLAMeasurement[]
+  slaViolations SLAViolation[]
+  complianceDashboards ComplianceDashboard[]
+  dashboardWidgets DashboardWidget[]
+  governanceRoles GovernanceRole[]
+  raciAssignments RACIAssignment[]
+  cabs CAB[]
+  cabMembers CABMember[]
+  cabProposals CABProposal[]
+  cabMeetings CABMeeting[]
+  cabReviews CABReview[]
+  cabVotes CABVote[]
+  cabMeetingItems CABMeetingItem[]
+  cabMeetingAttendees CABMeetingAttendee[]
+  connectors Connector[]
+  marketplaceListings MarketplaceListing[]
+  conformanceTestSuites ConformanceTestSuite[]
+  connectorInstallations ConnectorInstallation[]
+  connectorReviews ConnectorReview[]
+  marketplaceReviews MarketplaceReview[]
+  conformanceTests ConformanceTest[]
+  deltaBundles DeltaBundle[]
+  edgeDeployments EdgeDeployment[]
+  edgeSyncRecords EdgeSyncRecord[]
+  secureEnclaves SecureEnclave[]
+  resiliencePolicies ResiliencePolicy[]
+  resilienceIncidents ResilienceIncident[]
+  complianceAssets ComplianceAsset[]
+  complianceAssetDeployments ComplianceAssetDeployment[]
+  regulatorySDKs RegulatorySDK[]
+  complianceAssetUsage ComplianceAssetUsage[]
+  complianceAssetMarketplaceListings ComplianceAssetMarketplaceListing[]
+  riskExchangeContributions RiskExchangeContribution[]
+  riskExchangeVerifications RiskExchangeVerification[]
+  riskExchangeLeaderboards RiskExchangeLeaderboard[]
+  riskExchangeIncentives RiskExchangeIncentive[]
+  healthCompliancePacks HealthCompliancePack[]
+  esgCompliancePacks ESGCompliancePack[]
+  regulatoryStandards RegulatoryStandard[]
+  regulatoryCouncils RegulatoryCouncil[]
+  regulatoryCouncilMembers RegulatoryCouncilMember[]
+  patentApplications PatentApplication[]
+}
+
+// Data Protection & Privacy Models
+model ConsentObject {
+  id            String   @id @default(cuid())
+  knowledgeObjectId String?
+  decisionBundleId String?
+  consentType   ConsentType
+  purpose       String
+  legalBasis    String
+  retentionPeriod String? // e.g., "P1Y" for 1 year
+  expiryDate    DateTime?
+  isRevoked     Boolean  @default(false)
+  revokedAt     DateTime?
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  knowledgeObject KnowledgeObject? @relation(fields: [knowledgeObjectId], references: [id])
+  decisionBundle DecisionBundle? @relation(fields: [decisionBundleId], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  subjectRightsRequests SubjectRightsRequest[]
+}
+
+// Subject Rights & Data Protection Models
+model SubjectRightsRequest {
+  id            String   @id @default(cuid())
+  requestType   SubjectRightsType
+  status        SubjectRightsStatus @default(PENDING)
+  requestedBy   String   // User identifier (email, ID, etc.)
+  requestData   Json     // Details about what data is being requested/rectified/erased
+  response      Json?    // System response with data or confirmation
+  legalBasis    String   // Legal basis for the request (GDPR Article 15, 16, 17, etc.)
+  jurisdiction  String?  // Legal jurisdiction (GDPR, CCPA, LGPD, etc.)
+  priority      RequestPriority @default(MEDIUM)
+  dueDate       DateTime? // Deadline for response (e.g., 30 days for GDPR)
+  completedAt   DateTime?
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  consentObjects ConsentObject[]
+  auditLogs     AuditLog[]
+  dataErasureLogs DataErasureLog[]
+  dataRectificationLogs DataRectificationLog[]
+}
+
+model DataErasureLog {
+  id            String   @id @default(cuid())
+  requestId     String   // Associated subject rights request
+  resourceType  String   // Type of data erased (ConsentObject, DecisionBundle, etc.)
+  resourceId    String   // ID of the erased resource
+  erasureMethod String   // How the data was erased (delete, anonymize, redact)
+  verification  Json     // Proof of erasure
+  metadata      Json
+  tenantId      String
+  erasedAt      DateTime @default(now())
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  request       SubjectRightsRequest @relation(fields: [requestId], references: [id])
+}
+
+model DataRectificationLog {
+  id            String   @id @default(cuid())
+  requestId     String   // Associated subject rights request
+  resourceType  String   // Type of data rectified
+  resourceId    String   // ID of the rectified resource
+  originalData Json     // Data before rectification
+  rectifiedData Json    // Data after rectification
+  changeReason  String   // Reason for rectification
+  verification  Json     // Verification of changes
+  metadata      Json
+  tenantId      String
+  rectifiedAt   DateTime @default(now())
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  request       SubjectRightsRequest @relation(fields: [requestId], references: [id])
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  role          UserRole @default(USER)
+  tenantId      String
+  status        UserStatus @default(ACTIVE)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  sessions      Session[]
+  auditLogs     AuditLog[]
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  userId        String
+  token         String   @unique
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  
+  user          User @relation(fields: [userId], references: [id])
+}
+
+// Data Plane Models
+model DataSource {
+  id            String   @id @default(cuid())
+  name          String
+  type          DataSourceType
+  connectionString String
+  schema        Json
+  isActive      Boolean  @default(true)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  dataIngestions DataIngestion[]
+}
+
+model DataIngestion {
+  id            String   @id @default(cuid())
+  dataSourceId  String
+  dataType      FinancialDataType
+  status        IngestionStatus
+  recordCount   Int?
+  errorCount    Int?
+  lastSyncAt    DateTime?
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  dataSource    DataSource @relation(fields: [dataSourceId], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  lineages      DataLineage[]
+}
+
+model DataLineage {
+  id            String   @id @default(cuid())
+  ingestionId   String
+  agentId       String
+  decisionId    String?
+  transformType String
+  inputHash     String
+  outputHash    String
+  metadata      Json
+  createdAt     DateTime @default(now())
+  
+  ingestion     DataIngestion @relation(fields: [ingestionId], references: [id])
+  agent         Agent @relation(fields: [agentId], references: [id])
+}
+
+// Agent Framework Models
+model AgentPack {
+  id            String   @id @default(cuid())
+  name          String
+  sector        FinancialSector
+  description   String
+  version       String
+  isActive      Boolean  @default(true)
+  tenantId      String
+  config        Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  agents        Agent[]
+  deployments   Deployment[]
+}
+
+model Agent {
+  id            String   @id @default(cuid())
+  name          String
+  type          AgentType
+  status        AgentStatus @default(ACTIVE)
+  packId        String?
+  config        Json
+  capabilities  String   // JSON string array
+  runtimeType   RuntimeType @default(WASM)
+  quotas        Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  pack          AgentPack? @relation(fields: [packId], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  executions    AgentExecution[]
+  primaryCollaborations AgentCollaboration[] @relation("PrimaryAgent")
+  secondaryCollaborations AgentCollaboration[] @relation("SecondaryAgent")
+  decisionBundles DecisionBundle[]
+  processedTransactions FinancialTransaction[]
+  generatedReports ComplianceReport[]
+  lineageRecords DataLineage[]
+}
+
+model AgentExecution {
+  id            String   @id @default(cuid())
+  agentId       String
+  taskId        String
+  input         Json
+  output        Json?
+  status        ExecutionStatus
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+  error         String?
+  resourceUsage Json?
+  tenantId      String
+  
+  agent         Agent @relation(fields: [agentId], references: [id])
+  decisionBundles DecisionBundle[]
+}
+
+model AgentCollaboration {
+  id            String   @id @default(cuid())
+  primaryAgentId String
+  secondaryAgentId String
+  taskType      String
+  context       Json
+  status        CollaborationStatus
+  createdAt     DateTime @default(now())
+  
+  primaryAgent  Agent @relation("PrimaryAgent", fields: [primaryAgentId], references: [id])
+  secondaryAgent Agent @relation("SecondaryAgent", fields: [secondaryAgentId], references: [id])
+}
+
+// Compliance & Decision Models
+model DecisionBundle {
+  id            String   @id @default(cuid())
+  executionId   String
+  agentId       String
+  knowledgeObjectId String?
+  timestamp     DateTime @default(now())
+  inputHash     String
+  outputHash    String
+  input         Json
+  output        Json
+  explainability Json
+  modelInfo     Json
+  compliance    Json
+  signature     Json
+  tenantId      String
+  
+  // Enhanced fields for jurisdiction and model risk management
+  jurisdiction  String?  // Legal jurisdiction for this decision
+  residencyRegion String? // Geographic region for residency rules
+  modelVersion  String?  // Version of the model used
+  trainingDataSnapshotId String? // Snapshot ID of training data
+  driftScore    Float?   // Model drift score
+  fairnessMetrics Json?  // Fairness and bias metrics
+  challengeOutcome String? // Result of challenger model evaluation
+  isChallenger  Boolean  @default(false) // Whether this is a challenger model result
+  consentObjects ConsentObject[]
+  
+  agent         Agent @relation(fields: [agentId], references: [id])
+  execution     AgentExecution @relation(fields: [executionId], references: [id])
+  knowledgeObject KnowledgeObject? @relation(fields: [knowledgeObjectId], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model ComplianceRule {
+  id            String   @id @default(cuid())
+  name          String
+  type          ComplianceType
+  version       String
+  description   String
+  dsl           Json
+  isActive      Boolean  @default(true)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  complianceBundles ComplianceBundle[]
+}
+
+model ComplianceBundle {
+  id            String   @id @default(cuid())
+  name          String
+  version       String
+  rules         String   // JSON string array of ComplianceRule IDs
+  isActive      Boolean  @default(true)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  deployments   Deployment[]
+  complianceRules ComplianceRule[]
+}
+
+// Workflow & Orchestration Models
+model Workflow {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  definition    Json
+  status        WorkflowStatus @default(ACTIVE)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  executions    WorkflowExecution[]
+}
+
+model WorkflowExecution {
+  id            String   @id @default(cuid())
+  workflowId    String
+  status        ExecutionStatus
+  input         Json
+  output        Json?
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+  error         String?
+  tenantId      String
+  
+  workflow      Workflow @relation(fields: [workflowId], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  steps         WorkflowStep[]
+}
+
+model WorkflowStep {
+  id            String   @id @default(cuid())
+  executionId   String
+  stepNumber    Int
+  agentId       String
+  input         Json
+  output        Json?
+  status        ExecutionStatus
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+  error         String?
+  
+  execution     WorkflowExecution @relation(fields: [executionId], references: [id])
+}
+
+// Deployment & Operations Models
+model Deployment {
+  id            String   @id @default(cuid())
+  name          String
+  packId        String
+  bundleId      String?
+  status        DeploymentStatus @default(PENDING)
+  config        Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  pack          AgentPack @relation(fields: [packId], references: [id])
+  bundle        ComplianceBundle? @relation(fields: [bundleId], references: [id])
+}
+
+// Financial Services Models
+model FinancialTransaction {
+  id            String   @id @default(cuid())
+  type          TransactionType
+  amount        Decimal
+  currency      String
+  status        TransactionStatus
+  metadata      Json
+  processedById String?
+  tenantId      String
+  createdAt     DateTime @default(now())
+  
+  processedBy   Agent? @relation(fields: [processedById], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model ComplianceReport {
+  id            String   @id @default(cuid())
+  type          ComplianceType
+  status        ReportStatus
+  findings      Json
+  generatedById String
+  tenantId      String
+  createdAt     DateTime @default(now())
+  
+  generatedBy   Agent @relation(fields: [generatedById], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model CustomerProfile {
+  id            String   @id @default(cuid())
+  name          String
+  email         String
+  riskProfile   RiskProfile
+  kycStatus     KYCStatus
+  financialData Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model FraudSignal {
+  id            String   @id @default(cuid())
+  sourceAgentId String
+  type          FraudType
+  severity      FraudSeverity
+  confidence    Float
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+// Observability & Audit Models
+model AuditLog {
+  id            String   @id @default(cuid())
+  type          AuditType
+  userId        String?
+  tenantId      String
+  resourceId    String
+  resourceType  String
+  action        String
+  before        Json?
+  after         Json?
+  metadata      Json
+  timestamp     DateTime @default(now())
+  subjectRightsRequestId String? // Link to subject rights request if applicable
+  
+  user          User? @relation(fields: [userId], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  subjectRightsRequest SubjectRightsRequest? @relation(fields: [subjectRightsRequestId], references: [id])
+}
+
+model Metric {
+  id            String   @id @default(cuid())
+  name          String
+  type          MetricType
+  value         Float
+  labels        Json
+  timestamp     DateTime @default(now())
+  tenantId      String
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+// Marketplace Models
+model MarketplacePack {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  version       String
+  author        String
+  category      MarketplaceCategory
+  pricing       Json
+  tags          String   // JSON string array
+  rating        Float    @default(0)
+  downloadCount Int     @default(0)
+  certified     Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  bundleUrl     String
+  checksum      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  purchases     MarketplacePurchase[]
+}
+
+model MarketplacePurchase {
+  id            String   @id @default(cuid())
+  packId        String
+  tenantId      String
+  transactionId String
+  status        AssetPurchaseStatus @default(COMPLETED)
+  purchasedAt   DateTime @default(now())
+  
+  pack          MarketplacePack @relation(fields: [packId], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+// Airtable Knowledge Base Models
+model KnowledgeObject {
+  id            String   @id @default(cuid())
+  confidence    String   // 'High' | 'Medium'
+  topic         String
+  category      String
+  content       String
+  country       String   @default("Global")
+  regulationType String   @default("General")
+  effectiveDate String   @default("2024-01-01")
+  status        KnowledgeObjectStatus @default(validated)
+  lastUpdated   DateTime @default(now())
+  airtableId    String   @unique
+  tenantId      String   @default("system")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Provenance & Source of Truth fields
+  sourceUri     String?  // Original source URI
+  publisher     String?  // Publishing organization (FCA, FATF, etc.)
+  jurisdiction  String?  // Legal jurisdiction (GB, US, EU, etc.)
+  sunsetDate    String?  // Date when regulation expires
+  retrievalHash String?  // Content hash for verification
+  contentLicense String? // License type (MIT, CC-BY, Proprietary, etc.)
+  contentFingerprint String? // Unique fingerprint for deduplication
+  trustTier     TrustTier @default(T1) // Trust level T0-T2
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  decisionBundles DecisionBundle[]
+  consentObjects ConsentObject[]
+  complianceDomain ComplianceDomain? @relation(fields: [complianceDomainId], references: [id])
+  complianceDomainId String?
+}
+
+// Enums
+enum TenantStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum UserRole {
+  ADMIN
+  USER
+  AUDITOR
+  OPERATOR
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  SUSPENDED
+}
+
+enum DataSourceType {
+  POSTGRES
+  KAFKA
+  VECTOR_DB
+  API
+  FILE
+}
+
+enum FinancialDataType {
+  ISO20022
+  FIBO
+  ACORD
+  CUSTOM
+}
+
+enum IngestionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  PARTIAL
+}
+
+enum AgentType {
+  ONBOARDING_AGENT
+  CREDIT_RISK_AGENT
+  FRAUD_DETECTION_AGENT
+  LOAN_ORIGINATION_AGENT
+  CUSTOMER_SERVICE_AGENT
+  UNDERWRITING_AGENT
+  CLAIMS_PROCESSING_AGENT
+  INSURANCE_FRAUD_AGENT
+  PRODUCT_RECOMMENDATION_AGENT
+  ROBO_ADVISOR_AGENT
+  FINANCIAL_PLANNING_AGENT
+  MARKET_RESEARCH_AGENT
+  PAYMENT_ROUTING_AGENT
+  PAYMENT_FRAUD_AGENT
+  CROSS_BORDER_AGENT
+  AML_AGENT
+  REPORTING_AGENT
+  PRIVACY_AGENT
+}
+
+enum AgentStatus {
+  ACTIVE
+  INACTIVE
+  TRAINING
+  ERROR
+  MAINTENANCE
+}
+
+enum RuntimeType {
+  WASM
+  FIRECRACKER
+  DOCKER
+}
+
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+  TIMEOUT
+}
+
+enum CollaborationStatus {
+  INITIATED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum FinancialSector {
+  COMMERCIAL_BANKING
+  INSURANCE
+  WEALTH_MANAGEMENT
+  PAYMENTS
+  REGULATORY_COMPLIANCE
+}
+
+enum ComplianceType {
+  AML
+  KYC
+  GDPR
+  CCPA
+  SOX
+  BASEL_III
+}
+
+enum ReportStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  SUBMITTED
+  REJECTED
+}
+
+enum RiskProfile {
+  CONSERVATIVE
+  MODERATE
+  AGGRESSIVE
+}
+
+enum KYCStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  LOAN_DISBURSEMENT
+  PAYMENT
+  CLAIM_SETTLEMENT
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  FLAGGED
+  CANCELLED
+}
+
+enum WorkflowStatus {
+  ACTIVE
+  INACTIVE
+  DRAFT
+  ARCHIVED
+}
+
+enum DeploymentStatus {
+  PENDING
+  DEPLOYING
+  DEPLOYED
+  FAILED
+  ROLLING_BACK
+  ROLLED_BACK
+}
+
+enum FraudType {
+  TRANSACTION_FRAUD
+  IDENTITY_FRAUD
+  ACCOUNT_TAKEOVER
+  PAYMENT_FRAUD
+  INSURANCE_FRAUD
+}
+
+enum FraudSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AuditType {
+  USER_ACTION
+  AGENT_EXECUTION
+  COMPLIANCE_CHECK
+  DATA_ACCESS
+  SYSTEM_EVENT
+  SECURITY_EVENT
+}
+
+enum MetricType {
+  COUNTER
+  GAUGE
+  HISTOGRAM
+}
+
+enum MarketplaceCategory {
+  BANKING
+  INSURANCE
+  PAYMENTS
+  WEALTH_MANAGEMENT
+  COMPLIANCE
+  UTILITIES
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum KnowledgeObjectStatus {
+  validated
+  pending_review
+  deployed
+}
+
+enum TrustTier {
+  T0 // Highest trust - direct from regulator
+  T1 // Medium trust - verified secondary source
+  T2 // Lower trust - unverified source
+}
+
+enum ConsentType {
+  DATA_PROCESSING
+  AUTOMATED_DECISION
+  PROFILING
+  MARKETING
+  RESEARCH
+  COMPLIANCE_REPORTING
+}
+
+enum SubjectRightsType {
+  ACCESS_REQUEST      // Right to access personal data (GDPR Art 15)
+  RECTIFICATION       // Right to rectification (GDPR Art 16)
+  ERASURE             // Right to erasure / right to be forgotten (GDPR Art 17)
+  RESTRICT_PROCESSING // Right to restrict processing (GDPR Art 18)
+  DATA_PORTABILITY    // Right to data portability (GDPR Art 20)
+  OBJECT_AUTOMATED   // Right to object to automated decision making (GDPR Art 21)
+  CCPA_DELETE         // CCPA right to delete
+  CCPA_OPT_OUT        // CCPA right to opt out of sale
+  LGPD_ACCESS         // LGPD right to access
+  LGPD_DELETE         // LGPD right to delete
+}
+
+enum SubjectRightsStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+  ESCALATED
+  EXPIRED
+}
+
+enum RequestPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// Adversarial Testing Models
+model AdversarialTestExecution {
+  id            String   @id @default(cuid())
+  campaignId    String
+  status        TestExecutionStatus
+  startTime     DateTime
+  endTime       DateTime?
+  summary       Json     // Test execution summary with metrics
+  resultsByCategory Json   // Results grouped by fraud category
+  resultsByAgent Json     // Results grouped by agent
+  weakPoints    Json     // Array of identified weak points (stored as JSON)
+  recommendations Json     // Array of recommendations (stored as JSON)
+  passed        Boolean  // Whether the campaign passed thresholds
+  error         String?  // Error message if failed
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  reports       AdversarialTestReport[]
+}
+
+model AdversarialTestReport {
+  id            String   @id @default(cuid())
+  campaignId    String
+  executionId   String
+  reportType    TestReportType
+  format        TestReportFormat
+  content       Json     // Report content
+  metadata      Json     // Additional metadata like duration, systems tested, etc.
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  execution     AdversarialTestExecution @relation(fields: [executionId], references: [id])
+}
+
+enum TestExecutionStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum TestReportType {
+  SUMMARY
+  DETAILED
+  EXECUTIVE
+}
+
+enum TestReportFormat {
+  JSON
+  PDF
+  HTML
+}
+
+// Chaos Testing Models
+model ChaosTestScenario {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  category      ChaosTestCategory
+  targetSystem  String   // System being tested (e.g., "knowledge-base", "dsl-runtime", "messaging")
+  failureMode   String   // Type of failure to simulate
+  severity      ChaosSeverity
+  isActive      Boolean  @default(true)
+  config        Json     // Test configuration parameters
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  executions    ChaosTestExecution[]
+}
+
+model ChaosTestExecution {
+  id            String   @id @default(cuid())
+  scenarioId    String
+  status        ChaosExecutionStatus
+  startTime     DateTime @default(now())
+  endTime       DateTime?
+  config        Json     // Runtime configuration
+  results       Json     // Test results and metrics
+  systemImpact  Json     // Impact on system during test
+  recoveryTime  Int?     // Time to recover in milliseconds
+  autoRecovered Boolean  @default(false) // Whether system auto-recovered
+  error         String?  // Error message if failed
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  scenario      ChaosTestScenario @relation(fields: [scenarioId], references: [id])
+  reports       ChaosTestReport[]
+}
+
+model ChaosTestReport {
+  id            String   @id @default(cuid())
+  executionId   String
+  reportType    ChaosReportType
+  summary       Json     // Executive summary
+  findings      Json     // Detailed findings
+  recommendations Json     // Recommendations for improvement
+  resilienceScore Float   // System resilience score (0-100)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  execution     ChaosTestExecution @relation(fields: [executionId], references: [id])
+}
+
+enum ChaosTestCategory {
+  KNOWLEDGE_BASE_SYNC    // Stale KB sync scenarios
+  DSL_BUNDLE_CORRUPTION  // Corrupted DSL bundle scenarios
+  MESSAGING_FAILURE     // Dropped Kafka partitions, message loss
+  NETWORK_PARTITION     // Network connectivity issues
+  RESOURCE_EXHAUSTION   // CPU, memory, disk exhaustion
+  AGENT_FAILURE         // Agent process crashes
+  DATABASE_FAILURE      // Database connectivity issues
+}
+
+enum ChaosSeverity {
+  LOW      // Minimal impact, quick recovery
+  MEDIUM   // Moderate impact, manageable recovery
+  HIGH     // Significant impact, requires intervention
+  CRITICAL // Severe impact, potential data loss
+}
+
+enum ChaosExecutionStatus {
+  SCHEDULED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+  TIMEOUT
+}
+
+enum ChaosReportType {
+  EXECUTIVE  // High-level summary for stakeholders
+  TECHNICAL  // Detailed technical analysis
+  REMEDIATION // Focus on fixes and improvements
+}
+
+// Compliance SLA/SLO Models
+model ComplianceSLA {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  category      SLACategory
+  targetValue   Float    // Target percentage (0-100)
+  warningThreshold Float  // Warning threshold percentage
+  criticalThreshold Float // Critical threshold percentage
+  timeframe     SLATimeframe
+  isActive      Boolean  @default(true)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  measurements  SLAMeasurement[]
+  violations    SLAViolation[]
+}
+
+model SLAMeasurement {
+  id            String   @id @default(cuid())
+  slaId         String
+  metricName    String
+  actualValue   Float    // Actual measured value
+  targetValue   Float    // Target value for comparison
+  status        SLAStatus
+  measurementPeriod String // e.g., "2024-01", "2024-W01"
+  metadata      Json
+  tenantId      String
+  measuredAt    DateTime @default(now())
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  sla           ComplianceSLA @relation(fields: [slaId], references: [id])
+  violations    SLAViolation[]
+}
+
+model SLAViolation {
+  id            String   @id @default(cuid())
+  slaId         String
+  measurementId String?
+  severity      ViolationSeverity
+  description   String
+  impact        Json     // Impact assessment
+  remediation   Json     // Remediation steps
+  status        ViolationStatus @default(OPEN)
+  resolvedAt    DateTime?
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  sla           ComplianceSLA @relation(fields: [slaId], references: [id])
+  measurement   SLAMeasurement? @relation(fields: [measurementId], references: [id])
+}
+
+model ComplianceDashboard {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  config        Json     // Dashboard configuration
+  isActive      Boolean  @default(true)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  widgets       DashboardWidget[]
+}
+
+model DashboardWidget {
+  id            String   @id @default(cuid())
+  dashboardId   String
+  type          WidgetType
+  title         String
+  config        Json     // Widget-specific configuration
+  position      Json     // Position and size info
+  dataSource    String   // Data source for the widget
+  refreshInterval Int    // Refresh interval in seconds
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  dashboard     ComplianceDashboard @relation(fields: [dashboardId], references: [id])
+}
+
+enum SLACategory {
+  AVAILABILITY     // System availability SLAs
+  RESPONSE_TIME   // Response time SLAs
+  THROUGHPUT      // Throughput SLAs
+  ACCURACY        // Accuracy and compliance SLAs
+  RECOVERY_TIME   // Recovery time SLAs
+  DATA_QUALITY    // Data quality SLAs
+  AUDIT_COMPLIANCE // Audit compliance SLAs
+}
+
+enum SLATimeframe {
+  HOURLY          // Measured hourly
+  DAILY           // Measured daily
+  WEEKLY          // Measured weekly
+  MONTHLY         // Measured monthly
+  QUARTERLY       // Measured quarterly
+  YEARLY          // Measured yearly
+}
+
+enum SLAStatus {
+  COMPLIANT       // Meeting target
+  WARNING         // Below target but above warning threshold
+  CRITICAL        // Below warning threshold
+  VIOLATION       // Below critical threshold
+}
+
+enum ViolationSeverity {
+  LOW             // Minor violation
+  MEDIUM          // Moderate violation
+  HIGH            // Significant violation
+  CRITICAL        // Severe violation with business impact
+}
+
+enum ViolationStatus {
+  OPEN            // Violation is open
+  IN_PROGRESS     // Remediation in progress
+  RESOLVED        // Violation resolved
+  ESCALATED       // Escalated to management
+  CLOSED          // Closed with documentation
+}
+
+enum WidgetType {
+  METRIC_CARD     // Single metric display
+  CHART           // Line/bar/pie chart
+  GAUGE           // Gauge/meter widget
+  TABLE           // Data table
+  ALERT_LIST      // List of alerts/violations
+  TREND_ANALYSIS  // Trend analysis widget
+  COMPLIANCE_SCORE // Overall compliance score
+}
+
+// Governance Models
+model GovernanceRole {
+  id            String   @id @default(cuid())
+  name          String   // Role name (e.g., "Compliance Officer", "Risk Manager")
+  description   String
+  responsibilities String // JSON array of responsibilities
+  permissions   String   // JSON array of permissions
+  isActive      Boolean  @default(true)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  raciAssignments RACIAssignment[]
+  cabMembers    CABMember[]
+}
+
+model RACIAssignment {
+  id            String   @id @default(cuid())
+  processId     String   // Associated process or workflow
+  taskId        String?  // Specific task within the process
+  roleId        String   // Role assigned
+  raciType      RACIType // Responsible, Accountable, Consulted, Informed
+  description   String   // Description of the assignment
+  isActive      Boolean  @default(true)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  role          GovernanceRole @relation(fields: [roleId], references: [id])
+}
+
+model CAB {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  charter       String   // Board charter and scope
+  meetingSchedule String // Meeting schedule (e.g., "Weekly", "Bi-weekly")
+  isActive      Boolean  @default(true)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  members       CABMember[]
+  proposals     CABProposal[]
+  meetings      CABMeeting[]
+}
+
+model CABMember {
+  id            String   @id @default(cuid())
+  cabId         String
+  roleId        String
+  userId        String   // Associated user
+  joinDate      DateTime @default(now())
+  isActive      Boolean  @default(true)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  cab           CAB @relation(fields: [cabId], references: [id])
+  role          GovernanceRole @relation(fields: [roleId], references: [id])
+  meetingAttendees CABMeetingAttendee[]
+}
+
+model CABProposal {
+  id            String   @id @default(cuid())
+  cabId         String
+  title         String
+  description   String
+  changeType    ChangeType
+  priority      ProposalPriority
+  proposerId    String   // User who proposed the change
+  status        ProposalStatus @default(DRAFT)
+  riskAssessment Json     // Risk assessment details
+  impactAnalysis Json     // Impact analysis
+  rolloutPlan   Json     // Rollout plan
+  rollbackPlan  Json     // Rollback plan
+  approvalCriteria Json  // Criteria for approval
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  cab           CAB @relation(fields: [cabId], references: [id])
+  reviews       CABReview[]
+  votes         CABVote[]
+  meetingItems  CABMeetingItem[]
+}
+
+model CABMeeting {
+  id            String   @id @default(cuid())
+  cabId         String
+  title         String
+  description   String
+  scheduledDate DateTime
+  duration      Int      // Duration in minutes
+  location      String?  // Physical or virtual location
+  agenda        Json     // Meeting agenda
+  status        CouncilMeetingStatus @default(SCHEDULED)
+  minutes       Json?    // Meeting minutes
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  cab           CAB @relation(fields: [cabId], references: [id])
+  items         CABMeetingItem[]
+  attendees     CABMeetingAttendee[]
+}
+
+model CABMeetingItem {
+  id            String   @id @default(cuid())
+  meetingId     String
+  proposalId    String?
+  title         String
+  description   String
+  itemType      MeetingItemType
+  order         Int      // Order in agenda
+  duration      Int      // Duration in minutes
+  presenterId   String?  // User presenting the item
+  decision      String?  // Decision made
+  actionItems   Json?    // Action items from discussion
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  meeting       CABMeeting @relation(fields: [meetingId], references: [id])
+  proposal      CABProposal? @relation(fields: [proposalId], references: [id])
+}
+
+model CABMeetingAttendee {
+  id            String   @id @default(cuid())
+  meetingId     String
+  memberId      String
+  attendanceStatus AttendanceStatus
+  role          String?  // Role in meeting (e.g., "Chair", "Secretary")
+  notes         String?  // Personal notes
+  tenantId      String
+  createdAt     DateTime @default(now())
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  meeting       CABMeeting @relation(fields: [meetingId], references: [id])
+  member        CABMember @relation(fields: [memberId], references: [id])
+}
+
+model CABReview {
+  id            String   @id @default(cuid())
+  proposalId    String
+  reviewerId    String   // User who reviewed
+  reviewType    ReviewType
+  status        ReviewStatus @default(PENDING)
+  comments      String
+  recommendations String // Recommendations for improvement
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  proposal      CABProposal @relation(fields: [proposalId], references: [id])
+}
+
+model CABVote {
+  id            String   @id @default(cuid())
+  proposalId    String
+  voterId       String   // User who voted
+  voteType      VoteType
+  comments      String?  // Comments on the vote
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  proposal      CABProposal @relation(fields: [proposalId], references: [id])
+}
+
+enum RACIType {
+  RESPONSIBLE    // Responsible for doing the work
+  ACCOUNTABLE    // Accountable for the outcome
+  CONSULTED      // Consulted for input
+  INFORMED       // Informed of progress and outcomes
+}
+
+enum ChangeType {
+  MINOR          // Low risk, minimal impact
+  STANDARD       // Moderate risk, moderate impact
+  MAJOR          // High risk, significant impact
+  EMERGENCY      // Critical, immediate action required
+}
+
+enum ProposalPriority {
+  LOW            // Low priority
+  MEDIUM         // Medium priority
+  HIGH           // High priority
+  CRITICAL       // Critical priority
+}
+
+enum ProposalStatus {
+  DRAFT          // Proposal is being drafted
+  SUBMITTED      // Proposal submitted for review
+  UNDER_REVIEW   // Under review by CAB
+  APPROVED       // Approved by CAB
+  REJECTED       // Rejected by CAB
+  IMPLEMENTED   // Change has been implemented
+  CANCELLED      // Proposal cancelled
+}
+
+enum MeetingStatus {
+  SCHEDULED      // Meeting is scheduled
+  IN_PROGRESS    // Meeting is in progress
+  COMPLETED      // Meeting completed
+  CANCELLED      // Meeting cancelled
+}
+
+enum MeetingItemType {
+  PROPOSAL       // Change proposal discussion
+  REVIEW         // Review of previous changes
+  TRAINING       // Training or education item
+  ADMINISTRATIVE // Administrative items
+  OTHER          // Other agenda items
+}
+
+enum AttendanceStatus {
+  ATTENDING      // Will attend
+  DECLINED       // Declined attendance
+  TENTATIVE      // Tentative attendance
+  NO_RESPONSE    // No response yet
+}
+
+enum ReviewType {
+  TECHNICAL      // Technical review
+  BUSINESS       // Business impact review
+  SECURITY       // Security review
+  COMPLIANCE     // Compliance review
+  RISK           // Risk assessment review
+}
+
+enum ReviewStatus {
+  PENDING        // Review pending
+  IN_PROGRESS    // Review in progress
+  COMPLETED      // Review completed
+  APPROVED       // Review approved
+  REJECTED       // Review rejected
+}
+
+enum VoteType {
+  APPROVE        // Approve the proposal
+  REJECT         // Reject the proposal
+  ABSTAIN        // Abstain from voting
+  CONDITIONAL    // Conditional approval
+}
+
+// Connector Marketplace Models
+model Connector {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  version       String
+  category      ConnectorCategory
+  type          ConnectorType
+  provider      String
+  iconUrl       String?
+  documentationUrl String?
+  isActive      Boolean  @default(true)
+  isVerified    Boolean  @default(false)
+  downloadCount Int      @default(0)
+  rating        Float    @default(0)
+  reviewCount   Int      @default(0)
+  config        Json     // Connector configuration schema
+  capabilities  String   // JSON array of capabilities
+  requirements  String   // JSON array of requirements
+  pricing       Json     // Pricing information
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  listings      MarketplaceListing[]
+  conformanceTests ConformanceTest[]
+  installations ConnectorInstallation[]
+  reviews       ConnectorReview[]
+}
+
+model MarketplaceListing {
+  id            String   @id @default(cuid())
+  connectorId   String
+  title         String
+  description   String
+  shortDescription String
+  version       String
+  pricing       Json     // Pricing tiers and information
+  license       String   // License type
+  tags          Json     // Search tags (JSON array)
+  screenshots   Json     // URLs to screenshots (JSON array)
+  demoUrl       String?  // Demo URL
+  supportInfo   Json     // Support information
+  isActive      Boolean  @default(true)
+  isFeatured    Boolean  @default(false)
+  downloadCount Int      @default(0)
+  viewCount     Int      @default(0)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  connector     Connector @relation(fields: [connectorId], references: [id])
+  reviews       MarketplaceReview[]
+}
+
+model ConformanceTestSuite {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  version       String
+  category      TestCategory
+  targetTypes   Json     // Target connector types (JSON array)
+  testCases     Json     // Array of test case definitions
+  passCriteria  Json     // Pass/fail criteria
+  isActive      Boolean  @default(true)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  tests         ConformanceTest[]
+}
+
+model ConformanceTest {
+  id            String   @id @default(cuid())
+  connectorId   String
+  testSuiteId   String
+  status        TestStatus
+  score         Float    // Test score (0-100)
+  results       Json     // Detailed test results
+  passedTests   Int
+  failedTests   Int
+  totalTests    Int
+  executionTime Int      // Execution time in milliseconds
+  testReport    String?  // URL to test report
+  metadata      Json
+  tenantId      String
+  testedAt      DateTime @default(now())
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  connector     Connector @relation(fields: [connectorId], references: [id])
+  testSuite     ConformanceTestSuite @relation(fields: [testSuiteId], references: [id])
+}
+
+model ConnectorInstallation {
+  id            String   @id @default(cuid())
+  connectorId   String
+  tenantId      String
+  config        Json     // Installation configuration
+  status        InstallationStatus
+  version       String   // Installed version
+  installedBy   String   // User who installed
+  installedAt   DateTime @default(now())
+  lastUsed      DateTime?
+  metadata      Json
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  connector     Connector @relation(fields: [connectorId], references: [id])
+}
+
+model ConnectorReview {
+  id            String   @id @default(cuid())
+  connectorId   String
+  userId        String   // User who reviewed
+  rating        Int      // 1-5 rating
+  title         String
+  content       String
+  isVerified    Boolean  @default(false)
+  isPublic      Boolean  @default(true)
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  connector     Connector @relation(fields: [connectorId], references: [id])
+}
+
+model MarketplaceReview {
+  id            String   @id @default(cuid())
+  listingId     String
+  userId        String   // User who reviewed
+  rating        Int      // 1-5 rating
+  title         String
+  content       String
+  isVerified    Boolean  @default(false)
+  isPublic      Boolean  @default(true)
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  listing       MarketplaceListing @relation(fields: [listingId], references: [id])
+}
+
+enum ConnectorCategory {
+  DATA_SOURCE    // Data source connectors
+  API_INTEGRATION // API integration connectors
+  MESSAGING     // Messaging and event connectors
+  DATABASE       // Database connectors
+  CLOUD_SERVICE  // Cloud service connectors
+  SECURITY       // Security and authentication connectors
+  MONITORING     // Monitoring and logging connectors
+  COMPLIANCE     // Compliance and audit connectors
+  WORKFLOW       // Workflow automation connectors
+  OTHER          // Other connector types
+}
+
+enum ConnectorType {
+  SOURCE         // Data source connector
+  SINK           // Data sink connector
+  TRANSFORM      // Data transformation connector
+  HYBRID         // Hybrid connector
+}
+
+enum TestCategory {
+  FUNCTIONAL     // Functional testing
+  PERFORMANCE    // Performance testing
+  SECURITY       // Security testing
+  COMPLIANCE     // Compliance testing
+  INTEGRATION    // Integration testing
+  RELIABILITY    // Reliability testing
+}
+
+enum TestStatus {
+  PENDING        // Test pending
+  RUNNING        // Test running
+  PASSED         // Test passed
+  FAILED         // Test failed
+  CANCELLED      // Test cancelled
+}
+
+enum InstallationStatus {
+  INSTALLED      // Successfully installed
+  INSTALLING     // Installation in progress
+  FAILED         // Installation failed
+  UPDATING       // Update in progress
+  UNINSTALLED    // Uninstalled
+}
+
+// Edge Resilience Models
+model DeltaBundle {
+  id            String   @id @default(cuid())
+  bundleId      String   // Source bundle ID
+  version       String   // Delta version
+  parentVersion String?  // Parent version for incremental updates
+  changes       Json     // Changes included in this delta
+  checksum      String   // Bundle checksum for verification
+  size          Int      // Bundle size in bytes
+  compression   String   // Compression algorithm used
+  isEncrypted   Boolean  @default(true)
+  encryptionKey String?  // Encryption key reference
+  status        DeltaStatus @default(PENDING)
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  deployments   EdgeDeployment[]
+  syncRecords   EdgeSyncRecord[]
+}
+
+model EdgeDeployment {
+  id            String   @id @default(cuid())
+  deviceId      String   // Edge device identifier
+  deltaBundleId String
+  config        Json     // Deployment configuration
+  status        EdgeDeploymentStatus
+  deployedAt    DateTime?
+  lastSyncAt    DateTime?
+  nextSyncAt    DateTime?
+  error         String?
+  metrics       Json     // Deployment metrics
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  deltaBundle   DeltaBundle @relation(fields: [deltaBundleId], references: [id])
+  syncRecords   EdgeSyncRecord[]
+  secureEnclaves SecureEnclave[]
+}
+
+model EdgeSyncRecord {
+  id            String   @id @default(cuid())
+  deploymentId  String
+  deltaBundleId String
+  enclaveId     String?
+  syncType      SyncType
+  status        EdgeSyncStatus
+  bytesTransferred Int
+  duration      Int      // Duration in milliseconds
+  error         String?
+  retryCount    Int      @default(0)
+  metadata      Json
+  tenantId      String
+  syncedAt      DateTime @default(now())
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  deployment    EdgeDeployment @relation(fields: [deploymentId], references: [id])
+  deltaBundle   DeltaBundle @relation(fields: [deltaBundleId], references: [id])
+  secureEnclave SecureEnclave? @relation(fields: [enclaveId], references: [id])
+}
+
+model SecureEnclave {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  type          EnclaveType
+  status        EnclaveStatus @default(OFFLINE)
+  endpoint      String?  // Network endpoint
+  publicKey     String?  // Public key for encryption
+  capabilities  Json     // Enclave capabilities
+  lastHeartbeat DateTime?
+  config        Json     // Enclave configuration
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  deployments   EdgeDeployment[]
+  syncRecords   EdgeSyncRecord[]
+}
+
+model ResiliencePolicy {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  category      PolicyCategory
+  rules         Json     // Policy rules and conditions
+  actions       Json     // Actions to take when rules are triggered
+  isActive      Boolean  @default(true)
+  priority      PolicyPriority @default(MEDIUM)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  incidents     ResilienceIncident[]
+}
+
+model ResilienceIncident {
+  id            String   @id @default(cuid())
+  policyId      String
+  deviceId      String?
+  enclaveId     String?
+  incidentType  IncidentType
+  severity      IncidentSeverity
+  description   String
+  impact        Json     // Impact assessment
+  response      Json     // Response actions taken
+  status        IncidentStatus @default(OPEN)
+  resolvedAt    DateTime?
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  policy        ResiliencePolicy @relation(fields: [policyId], references: [id])
+}
+
+enum DeltaStatus {
+  PENDING        // Delta bundle pending processing
+  PROCESSING     // Delta bundle being processed
+  COMPLETED      // Delta bundle completed
+  FAILED         // Delta bundle failed
+  CANCELLED      // Delta bundle cancelled
+}
+
+enum EdgeDeploymentStatus {
+  PENDING        // Deployment pending
+  DEPLOYING      // Deployment in progress
+  DEPLOYED       // Successfully deployed
+  FAILED         // Deployment failed
+  ROLLING_BACK   // Rolling back deployment
+  ROLLED_BACK    // Deployment rolled back
+}
+
+enum SyncType {
+  FULL           // Full synchronization
+  INCREMENTAL    // Incremental synchronization
+  DELTA          // Delta-only synchronization
+  RECOVERY       // Recovery synchronization
+}
+
+enum EdgeSyncStatus {
+  PENDING        // Sync pending
+  SYNCING        // Sync in progress
+  COMPLETED      // Sync completed
+  FAILED         // Sync failed
+  RETRYING       // Sync retrying
+}
+
+enum EnclaveType {
+  HARDWARE       // Hardware-based secure enclave
+  SOFTWARE       // Software-based secure enclave
+  HYBRID         // Hybrid secure enclave
+  VIRTUAL        // Virtual secure enclave
+}
+
+enum EnclaveStatus {
+  ONLINE         // Enclave is online and operational
+  OFFLINE        // Enclave is offline
+  MAINTENANCE    // Enclave is under maintenance
+  DEGRADED       // Enclave is operating in degraded mode
+  ERROR          // Enclave is in error state
+}
+
+enum PolicyCategory {
+  AVAILABILITY   // Availability policies
+  PERFORMANCE    // Performance policies
+  SECURITY       // Security policies
+  COMPLIANCE     // Compliance policies
+  DATA_INTEGRITY // Data integrity policies
+  RECOVERY       // Recovery policies
+}
+
+enum PolicyPriority {
+  LOW            // Low priority policy
+  MEDIUM         // Medium priority policy
+  HIGH           // High priority policy
+  CRITICAL       // Critical priority policy
+}
+
+enum IncidentType {
+  CONNECTIVITY   // Connectivity incident
+  PERFORMANCE    // Performance incident
+  SECURITY       // Security incident
+  DATA_LOSS      // Data loss incident
+  SYNC_FAILURE   // Synchronization failure
+  ENCLINE_ERROR  // Secure enclave error
+}
+
+enum IncidentSeverity {
+  LOW            // Low severity incident
+  MEDIUM         // Medium severity incident
+  HIGH           // High severity incident
+  CRITICAL       // Critical severity incident
+}
+
+enum IncidentStatus {
+  OPEN           // Incident is open
+  IN_PROGRESS    // Incident is being addressed
+  RESOLVED       // Incident is resolved
+  ESCALATED      // Incident is escalated
+  CLOSED         // Incident is closed
+}
+
+// Regulatory DSL Marketplace Models
+model DSLBundle {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  version       String   @default("1.0.0")
+  publisherId   String
+  jurisdiction  String
+  category      String
+  tags          Json     // JSON array of tags
+  code          String   // DSL code content
+  preview       String   // Preview of the code (first 500 chars)
+  signature     String   // Digital signature
+  complianceScore Int     @default(95) // Compliance score percentage
+  fileSize      Int      // File size in bytes
+  dependencies  Json     // JSON array of dependency bundle IDs
+  downloads     Int      @default(0)
+  status        BundleStatus @default(DRAFT)
+  changelog     Json     // JSON array of changelog entries
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  publisher     Regulator @relation(fields: [publisherId], references: [id])
+  reviews       BundleReview[]
+}
+
+model Regulator {
+  id            String   @id @default(cuid())
+  name          String
+  jurisdiction  String
+  verified      Boolean  @default(false)
+  joinDate      DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  bundles       DSLBundle[]
+}
+
+model BundleReview {
+  id            String   @id @default(cuid())
+  bundleId      String
+  userId        String?
+  rating        Int      // 1-5 rating
+  comment       String?
+  createdAt     DateTime @default(now())
+  
+  bundle        DSLBundle @relation(fields: [bundleId], references: [id])
+}
+
+enum BundleStatus {
+  DRAFT          // Bundle is in draft state
+  PUBLISHED      // Bundle is published
+  DEPRECATED     // Bundle is deprecated
+  ARCHIVED       // Bundle is archived
+}
+
+// Federated Risk Exchange Models
+model RiskSignal {
+  id            String   @id @default(cuid())
+  type          String
+  severity      String   // LOW, MEDIUM, HIGH, CRITICAL
+  category      String
+  description   String
+  sourceJurisdiction String
+  affectedJurisdictions Json // JSON array of affected jurisdictions
+  timestamp     DateTime @default(now())
+  confidence    Int      // Confidence score 0-100
+  isEncrypted   Boolean  @default(true)
+  aggregationMethod String // FEDERATED_AVERAGING, SECURE_AGGREGATION, etc.
+  participantCount Int     @default(1)
+  metadata      Json
+  contributorId String
+  receiverId    String?
+  
+  contributor   NetworkNode @relation("ContributedSignals", fields: [contributorId], references: [id])
+  receiver     NetworkNode? @relation("ReceivedSignals", fields: [receiverId], references: [id])
+  aggregatedRisks AggregatedRisk[] @relation("RiskSignalAggregatedRisk")
+}
+
+model NetworkNode {
+  id            String   @id @default(cuid())
+  name          String
+  jurisdiction  String
+  status        NodeStatus @default(OFFLINE)
+  lastSync      DateTime @default(now())
+  encryptionLevel String @default("AES_256")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  contributedSignals RiskSignal[] @relation("ContributedSignals")
+  receivedSignals RiskSignal[] @relation("ReceivedSignals")
+}
+
+model AggregatedRisk {
+  id            String   @id @default(cuid())
+  type          String
+  globalSeverity Float    // Global severity score
+  affectedRegions Json    // JSON array of affected regions
+  timeWindow    String   // Time window for aggregation (e.g., "24h", "7d")
+  participantCount Int     @default(0)
+  trend         RiskTrend @default(STABLE)
+  privacyMethod String   // DIFFERENTIAL_PRIVACY, SECURE_MULTI_PARTY_COMPUTATION, etc.
+  aggregatedData Json    // Aggregated risk data
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  sourceSignals RiskSignal[] @relation("RiskSignalAggregatedRisk")
+}
+
+enum NodeStatus {
+  ONLINE         // Node is online and operational
+  OFFLINE        // Node is offline
+  SYNCING        // Node is syncing with network
+  MAINTENANCE    // Node is under maintenance
+}
+
+enum RiskTrend {
+  INCREASING     // Risk is increasing
+  DECREASING     // Risk is decreasing
+  STABLE         // Risk is stable
+}
+
+// Compliance Copilot Models
+model ComplianceChatMessage {
+  id            String   @id @default(cuid())
+  type          MessageType // USER or ASSISTANT
+  content       String
+  timestamp     DateTime @default(now())
+  taskId        String?
+  suggestions   Json     // JSON array of suggestions
+  metadata      Json
+  
+  task          ComplianceTask? @relation(fields: [taskId], references: [id])
+}
+
+model ComplianceTask {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  status        TaskStatus @default(PENDING)
+  priority      TaskPriority @default(MEDIUM)
+  assignedTo    AssignmentType @default(HUMAN)
+  progress      Int      @default(0)
+  estimatedTime String
+  actualTime    String?
+  suggestions   Json     // JSON array of AI suggestions
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  messages      ComplianceChatMessage[]
+}
+
+model ComplianceInsight {
+  id            String   @id @default(cuid())
+  type          InsightType
+  title         String
+  description   String
+  impact        ImpactLevel @default(MEDIUM)
+  confidence    Int      @default(85)
+  actionable    Boolean  @default(true)
+  category      String
+  timestamp     DateTime @default(now())
+  metadata      Json
+}
+
+enum MessageType {
+  USER           // Message from human user
+  ASSISTANT      // Message from AI assistant
+}
+
+enum TaskStatus {
+  PENDING        // Task is pending
+  IN_PROGRESS    // Task is in progress
+  COMPLETED      // Task is completed
+  REVIEW_REQUIRED // Task requires review
+}
+
+enum TaskPriority {
+  LOW            // Low priority task
+  MEDIUM         // Medium priority task
+  HIGH           // High priority task
+  CRITICAL       // Critical priority task
+}
+
+enum AssignmentType {
+  HUMAN          // Assigned to human
+  AGENT          // Assigned to AI agent
+  COLLABORATIVE  // Collaborative between human and agent
+}
+
+enum InsightType {
+  RISK           // Risk-related insight
+  OPPORTUNITY    // Opportunity-related insight
+  COMPLIANCE     // Compliance-related insight
+  OPTIMIZATION   // Optimization-related insight
+}
+
+enum ImpactLevel {
+  LOW            // Low impact
+  MEDIUM         // Medium impact
+  HIGH           // High impact
+}
+
+// Self-Healing Compliance System Models
+model HealingEvent {
+  id            String   @id @default(cuid())
+  type          HealingEventType
+  severity      HealingEventSeverity
+  component     String
+  description   String
+  action        String
+  timestamp     DateTime @default(now())
+  status        HealingEventStatus @default(PENDING)
+  impact        String
+  resolutionTime DateTime?
+  metadata      Json
+
+  @@map("healing_events")
+}
+
+model SystemHealth {
+  id            String   @id @default(cuid())
+  component     String
+  status        SystemHealthStatus
+  uptime        Float
+  lastCheck     DateTime @default(now())
+  metrics       Json     // CPU, Memory, Disk, ResponseTime metrics
+  metadata      Json
+
+  @@map("system_health")
+}
+
+model HealingRule {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  condition     String
+  action        String
+  enabled       Boolean  @default(true)
+  priority      Int
+  lastTriggered DateTime?
+  successRate   Float    @default(0.0)
+  metadata      Json
+
+  @@map("healing_rules")
+}
+
+model ComplianceSnapshot {
+  id            String   @id @default(cuid())
+  timestamp     DateTime @default(now())
+  score         Float
+  issues        Int
+  criticalIssues Int
+  components    Json     // Component scores (dataPlane, agentRuntime, complianceEngine, knowledgeBase, securityLayer)
+  metadata      Json
+
+  @@map("compliance_snapshots")
+}
+
+// Self-Healing Enums
+enum HealingEventType {
+  AUTO_REVERT           // Automatic system revert
+  ALERT                 // Alert generation
+  MANUAL_INTERVENTION   // Manual intervention required
+  PREVENTIVE           // Preventive action
+}
+
+enum HealingEventSeverity {
+  LOW                   // Low severity event
+  MEDIUM                // Medium severity event
+  HIGH                  // High severity event
+  CRITICAL              // Critical severity event
+}
+
+enum HealingEventStatus {
+  PENDING               // Event is pending action
+  IN_PROGRESS           // Event is being processed
+  RESOLVED              // Event has been resolved
+  FAILED                // Event resolution failed
+}
+
+enum SystemHealthStatus {
+  HEALTHY               // System is healthy
+  DEGRADED              // System is degraded
+  CRITICAL              // System is in critical state
+  OFFLINE               // System is offline
+}
+
+// Zero-Knowledge Compliance Proofs Models
+model ZKProof {
+  id            String   @id @default(cuid())
+  type          ZKProofType
+  circuit       String
+  publicInputs  String   // JSON array of public inputs
+  proof         String
+  verified      Boolean  @default(false)
+  timestamp     DateTime @default(now())
+  verifier      String
+  metadata      Json
+
+  @@map("zk_proofs")
+}
+
+model ZKCircuit {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  type          ZKCircuitType
+  constraints   Int
+  setupComplete Boolean  @default(false)
+  verificationKey String
+  provingKey    String
+  lastUsed      DateTime?
+  performance   Json     // Proving time, verification time, memory usage
+  metadata      Json
+
+  @@map("zk_circuits")
+}
+
+model ComplianceStatement {
+  id            String   @id @default(cuid())
+  regulation    String
+  jurisdiction  String
+  statement     String
+  zkCircuitId   String
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  lastVerified  DateTime @default(now())
+  verificationCount Int    @default(0)
+  metadata      Json
+
+  @@map("compliance_statements")
+}
+
+model ZKSession {
+  id            String   @id @default(cuid())
+  participantId String
+  circuitId     String
+  status        ZKSessionStatus @default(INITIATED)
+  startTime     DateTime @default(now())
+  endTime       DateTime?
+  proof         String?
+  publicInputs  String   // JSON array of public inputs
+  metadata      Json
+
+  @@map("zk_sessions")
+}
+
+// Zero-Knowledge Enums
+enum ZKProofType {
+  COMPLIANCE            // Compliance verification proof
+  IDENTITY              // Identity verification proof
+  TRANSACTION           // Transaction privacy proof
+  REPORT                // Report generation proof
+}
+
+enum ZKCircuitType {
+  GROTH16               // Groth16 proving system
+  PLONK                 // PLONK proving system
+  STARK                 // STARK proving system
+  R1CS                  // Rank-1 Constraint System
+}
+
+enum ZKSessionStatus {
+  INITIATED             // Session initiated
+  PROVING               // Proof generation in progress
+  VERIFIED              // Proof successfully verified
+  FAILED                // Proof generation or verification failed
+}
+
+// Compliance Assets Models
+model ComplianceAsset {
+  id            String   @id @default(cuid())
+  name          String
+  type          ComplianceAssetType
+  language      String
+  code          String
+  config        Json
+  dependencies  String   // JSON array of dependency strings
+  endpoints     String   // JSON array of endpoint URLs
+  description   String
+  regulation    String
+  category      String
+  status        ComplianceAssetStatus @default(GENERATED)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  deployments   ComplianceAssetDeployment[]
+  sdks          RegulatorySDK[]
+  usage         ComplianceAssetUsage[]
+  marketplaceListings ComplianceAssetMarketplaceListing[]
+}
+
+model ComplianceAssetDeployment {
+  id            String   @id @default(cuid())
+  assetId       String
+  status        DeploymentStatus @default(DEPLOYING)
+  config        Json
+  endpoint      String
+  logs          String?
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  asset         ComplianceAsset @relation(fields: [assetId], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  usage         ComplianceAssetUsage[]
+}
+
+model RegulatorySDK {
+  id            String   @id @default(cuid())
+  assetId       String
+  language      String
+  code          String
+  version       String
+  status        SDKStatus @default(GENERATED)
+  config        Json
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  asset         ComplianceAsset @relation(fields: [assetId], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  downloads     SDKDownload[]
+}
+
+model SDKDownload {
+  id            String   @id @default(cuid())
+  sdkId         String
+  downloadedAt  DateTime @default(now())
+  ipAddress     String
+  userAgent     String
+  metadata      Json
+  
+  sdk           RegulatorySDK @relation(fields: [sdkId], references: [id])
+}
+
+model ComplianceAssetUsage {
+  id            String   @id @default(cuid())
+  assetId       String
+  deploymentId  String?
+  usageType     UsageType
+  requestCount  Int      @default(0)
+  errorCount    Int      @default(0)
+  avgResponseTime Float   @default(0)
+  lastUsedAt    DateTime?
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  asset         ComplianceAsset @relation(fields: [assetId], references: [id])
+  deployment    ComplianceAssetDeployment? @relation(fields: [deploymentId], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model ComplianceAssetMarketplaceListing {
+  id            String   @id @default(cuid())
+  assetId       String
+  price         Float    // Price in USD
+  currency      String   @default("USD")
+  isPublic      Boolean  @default(true)
+  category      String
+  tags          String   // JSON array of tags
+  description   String
+  documentation String?
+  status        MarketplaceStatus @default(ACTIVE)
+  downloadCount Int      @default(0)
+  rating        Float    @default(0)
+  reviewCount   Int      @default(0)
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  asset         ComplianceAsset @relation(fields: [assetId], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  purchases     ComplianceAssetPurchase[]
+  reviews       ComplianceAssetReview[]
+}
+
+model ComplianceAssetPurchase {
+  id            String   @id @default(cuid())
+  listingId     String
+  buyerId       String   // Tenant ID of buyer
+  price         Float    // Price in USD
+  currency      String   @default("USD")
+  licenseKey    String?
+  status        AssetPurchaseStatus @default(COMPLETED)
+  metadata      Json
+  createdAt     DateTime @default(now())
+  
+  listing       ComplianceAssetMarketplaceListing @relation(fields: [listingId], references: [id])
+}
+
+model ComplianceAssetReview {
+  id            String   @id @default(cuid())
+  listingId     String
+  reviewerId    String   // Tenant ID of reviewer
+  rating        Int      // 1-5 stars
+  title         String?
+  comment       String?
+  status        AssetReviewStatus @default(APPROVED)
+  metadata      Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  listing       ComplianceAssetMarketplaceListing @relation(fields: [listingId], references: [id])
+}
+
+// Risk Exchange Incentive Models
+model RiskExchangeContribution {
+  id            String   @id @default(cuid())
+  contributorId String   // Tenant ID
+  signalType    String   // Type of risk signal (fraud, AML, etc.)
+  signalData    Json     // The actual risk signal data
+  confidence    Float    // Confidence score 0-1
+  verified      Boolean  @default(false)
+  verificationScore Float? // Score after verification
+  points        Int      @default(0) // Points earned
+  badges        String   // JSON array of earned badges
+  status        ContributionStatus @default(PENDING)
+  metadata      Json
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  verifications RiskExchangeVerification[]
+}
+
+model RiskExchangeVerification {
+  id            String   @id @default(cuid())
+  contributionId String
+  verifierId    String   // Tenant ID of verifier
+  score         Float    // Verification score 0-1
+  feedback      String?
+  status        VerificationStatus @default(COMPLETED)
+  metadata      Json
+  verifiedAt    DateTime @default(now())
+  tenantId      String
+  
+  contribution  RiskExchangeContribution @relation(fields: [contributionId], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model RiskExchangeLeaderboard {
+  id            String   @id @default(cuid())
+  tenantId      String
+  period        LeaderboardPeriod
+  rank          Int
+  totalPoints   Int      @default(0)
+  contributions Int      @default(0)
+  badges        String   // JSON array of badge names
+  metadata      Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model RiskExchangeIncentive {
+  id            String   @id @default(cuid())
+  tenantId      String
+  type          IncentiveType
+  value         Float    // Value in USD
+  currency      String   @default("USD")
+  description   String
+  earnedAt      DateTime @default(now())
+  expiresAt     DateTime?
+  status        IncentiveStatus @default(ACTIVE)
+  metadata      Json
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+// Cross-Domain Compliance Models
+model ComplianceDomain {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  regulations   String   // JSON array of regulation names
+  isActive      Boolean  @default(true)
+  metadata      Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  knowledgeObjects KnowledgeObject[]
+}
+
+model HealthCompliancePack {
+  id            String   @id @default(cuid())
+  name          String
+  regulation    String   // HIPAA, DHA, GDPR-Health, etc.
+  rules         Json     // Health-specific compliance rules
+  isActive      Boolean  @default(true)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model ESGCompliancePack {
+  id            String   @id @default(cuid())
+  name          String
+  regulation    String   // EU Taxonomy, TCFD, etc.
+  metrics       Json     // ESG-specific metrics and rules
+  isActive      Boolean  @default(true)
+  tenantId      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+// Standards & Patents Models
+model RegulatoryStandard {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  version       String
+  type          StandardType
+  status        StandardStatus @default(DRAFT)
+  content       String   // Full standard document
+  tenantId      String
+  metadata      Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  councilMembers RegulatoryCouncilMember[]
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model RegulatoryCouncil {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  type          CouncilType
+  isActive      Boolean  @default(true)
+  tenantId      String
+  metadata      Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  members       RegulatoryCouncilMember[]
+  meetings      CouncilMeeting[]
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model RegulatoryCouncilMember {
+  id            String   @id @default(cuid())
+  councilId     String
+  tenantId      String
+  role          CouncilRole
+  joinDate      DateTime @default(now())
+  status        MemberStatus @default(ACTIVE)
+  metadata      Json
+  
+  council       RegulatoryCouncil @relation(fields: [councilId], references: [id])
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+  standards     RegulatoryStandard[]
+}
+
+model CouncilMeeting {
+  id            String   @id @default(cuid())
+  councilId     String
+  title         String
+  description   String
+  scheduledAt   DateTime
+  duration      Int      // Duration in minutes
+  status        CouncilMeetingStatus @default(SCHEDULED)
+  agenda        Json
+  minutes       String?
+  metadata      Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  council       RegulatoryCouncil @relation(fields: [councilId], references: [id])
+}
+
+model PatentApplication {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  type          PatentType
+  status        PatentStatus @default(DRAFT)
+  inventors     String   // JSON array of inventor names
+  claims        Json     // Patent claims
+  specification String   // Full patent specification
+  filingDate    DateTime?
+  applicationNumber String?
+  tenantId      String
+  metadata      Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant        Tenant @relation(fields: [tenantId], references: [id])
+}
+
+// Compliance Assets Enums
+enum ComplianceAssetType {
+  API_ENDPOINT          // API endpoint
+  MICROSERVICE          // Deployable microservice
+  SDK_STUB              // SDK stub
+  CONTAINER             // Container image
+  SERVERLESS            // Serverless function
+}
+
+enum ComplianceAssetStatus {
+  GENERATED             // Generated but not deployed
+  DEPLOYED              // Successfully deployed
+  FAILED                // Deployment failed
+  DEPRECATED            // Deprecated asset
+}
+
+enum SDKStatus {
+  GENERATED             // Generated SDK
+  PUBLISHED             // Published to marketplace
+  DEPRECATED            // Deprecated SDK
+}
+
+enum UsageType {
+  API_CALL              // API call usage
+  EVALUATION            // Rule evaluation
+  REPORTING             // Report generation
+  BATCH_PROCESSING      // Batch processing
+}
+
+enum MarketplaceStatus {
+  ACTIVE                // Active listing
+  INACTIVE              // Inactive listing
+  PENDING               // Pending approval
+  REJECTED              // Rejected listing
+}
+
+enum AssetPurchaseStatus {
+  COMPLETED             // Completed purchase
+  PENDING               // Pending payment
+  CANCELLED             // Cancelled purchase
+  REFUNDED              // Refunded purchase
+}
+
+enum AssetReviewStatus {
+  APPROVED              // Approved review
+  PENDING               // Pending moderation
+  REJECTED              // Rejected review
+}
+
+// Risk Exchange Enums
+enum ContributionStatus {
+  PENDING               // Pending verification
+  VERIFIED              // Verified contribution
+  REJECTED              // Rejected contribution
+  FLAGGED               // Flagged for review
+}
+
+enum VerificationStatus {
+  PENDING               // Pending verification
+  COMPLETED             // Verification completed
+  FAILED                // Verification failed
+}
+
+enum LeaderboardPeriod {
+  DAILY                 // Daily leaderboard
+  WEEKLY                // Weekly leaderboard
+  MONTHLY               // Monthly leaderboard
+  YEARLY                // Yearly leaderboard
+  ALL_TIME              // All-time leaderboard
+}
+
+enum IncentiveType {
+  CREDIT                // Account credit
+  DISCOUNT              // Subscription discount
+  TOKEN                 // Token reward
+  BADGE                 // Badge reward
+}
+
+enum IncentiveStatus {
+  ACTIVE                // Active incentive
+  USED                  // Used incentive
+  EXPIRED               // Expired incentive
+}
+
+// Standards & Patents Enums
+enum StandardType {
+  DECISION_BUNDLE       // Decision Bundle standard
+  COMPLIANCE_DSL        // Compliance DSL standard
+  ZK_COMPLIANCE         // Zero-Knowledge Compliance standard
+  INTEROPERABILITY      // Interoperability standard
+}
+
+enum StandardStatus {
+  DRAFT                 // Draft standard
+  PROPOSED              // Proposed standard
+  ADOPTED               // Adopted standard
+  DEPRECATED            // Deprecated standard
+}
+
+enum CouncilType {
+  REGULATORY            // Regulatory council
+  TECHNICAL             // Technical council
+  INDUSTRY              // Industry council
+}
+
+enum CouncilRole {
+  CHAIR                 // Council chair
+  MEMBER                // Council member
+  OBSERVER              // Observer
+  SECRETARY             // Council secretary
+}
+
+enum MemberStatus {
+  ACTIVE                // Active member
+  INACTIVE              // Inactive member
+  SUSPENDED             // Suspended member
+}
+
+enum CouncilMeetingStatus {
+  SCHEDULED             // Scheduled meeting
+  IN_PROGRESS           // Meeting in progress
+  COMPLETED             // Completed meeting
+  CANCELLED             // Cancelled meeting
+}
+
+enum PatentType {
+  MICROSERVICE_GENERATION // Microservice auto-generation
+  CROSS_DOMAIN_DSL      // Cross-domain Compliance DSL
+  ZK_COMPLIANCE_FRAMEWORK // ZK Compliance Framework
+  NL_COMPILER           // Natural Language Compiler
+}
+
+enum PatentStatus {
+  DRAFT                 // Draft application
+  FILED                 // Filed with patent office
+  PENDING               // Pending approval
+  GRANTED               // Patent granted
+  REJECTED              // Patent rejected
+}
+

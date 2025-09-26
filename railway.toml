@@ -1,0 +1,12 @@
+[build]
+command = "npm run deploy:prepare"
+
+[deploy]
+startCommand = "npm start"
+
+[env]
+NODE_ENV = "production"
+
+# Database configuration for Railway
+# Railway will provide a PostgreSQL database, so we need to update the DATABASE_URL
+# This will be set automatically by Railway when a database is attached

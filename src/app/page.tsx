@@ -1,10 +1,77 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ElegantNavigation } from '@/components/navigation/ElegantNavigation';
+
+// Import all module components
+import { KnowledgeManager } from '@/components/knowledge/KnowledgeManager';
+import { EnhancedComplianceCopilot } from '@/components/compliance-copilot/EnhancedComplianceCopilot';
+import { ConsentManager } from '@/components/consent/ConsentManager';
+import { SubjectRightsManager } from '@/components/subject-rights/SubjectRightsManager';
+import { EnhancedFederatedRiskExchange } from '@/components/risk-exchange/EnhancedFederatedRiskExchange';
+import { FederatedRiskExchange } from '@/components/risk-exchange/FederatedRiskExchange';
+import { IncentivizedRiskExchange } from '@/components/risk-exchange/IncentivizedRiskExchange';
+import { SelfHealingCompliance } from '@/components/self-healing/SelfHealingCompliance';
+import { ZeroKnowledgeCompliance } from '@/components/zk-compliance/ZeroKnowledgeCompliance';
+import { ComplianceAssetManager } from '@/components/compliance-assets/ComplianceAssetManager';
+import { ComplianceAssetGenerator } from '@/components/compliance-assets/ComplianceAssetGenerator';
+import { HealthTechComplianceManager } from '@/components/health-tech/HealthTechComplianceManager';
+import { ESGComplianceManager } from '@/components/esg/ESGComplianceManager';
+import { RegulatoryDSLMarketplace } from '@/components/marketplace/RegulatoryDSLMarketplace';
+import { ChaosTestingManager } from '@/components/chaos/ChaosTestingManager';
+import { SecurityManager } from '@/components/security/SecurityManager';
+import { DataSourceManager } from '@/components/data-plane/DataSourceManager';
+import { IngestionManager } from '@/components/data-plane/IngestionManager';
+import { AgentExecutionPanel } from '@/components/agents/AgentExecutionPanel';
+import { AgentPackageManager } from '@/components/agent-packages/AgentPackageManager';
+import { WorkflowManager } from '@/components/workflows/WorkflowManager';
+import { FraudMutationManager } from '@/components/fraud/FraudMutationManager';
+
+// Component mapping for navigation items
+const componentMap: Record<string, React.ComponentType> = {
+  'overview': () => null, // Handled separately in the main render
+  
+  // Data Plane Management
+  'data-sources': DataSourceManager,
+  'ingestion': IngestionManager,
+  
+  // Agent Ecosystem
+  'agents': AgentExecutionPanel,
+  'packages': AgentPackageManager,
+  'workflows': WorkflowManager,
+  
+  // Compliance Intelligence
+  'knowledge': KnowledgeManager,
+  'enhanced-copilot': EnhancedComplianceCopilot,
+  
+  // Privacy Management
+  'consent': ConsentManager,
+  'subject-rights': SubjectRightsManager,
+  
+  // Risk Exchange
+  'risk-exchange': FederatedRiskExchange,
+  'federated-exchange': EnhancedFederatedRiskExchange,
+  'incentivized-exchange': IncentivizedRiskExchange,
+  
+  // Advanced Compliance
+  'self-healing': SelfHealingCompliance,
+  'zk-compliance': ZeroKnowledgeCompliance,
+  'compliance-assets': ComplianceAssetManager,
+  'asset-generator': ComplianceAssetGenerator,
+  
+  // Industry Solutions
+  'health-tech': HealthTechComplianceManager,
+  'esg': ESGComplianceManager,
+  
+  // Other Modules
+  'marketplace': RegulatoryDSLMarketplace,
+  'chaos-testing': ChaosTestingManager,
+  'security': SecurityManager,
+  'fraud': FraudMutationManager,
+};
 import { 
   CheckCircle, 
   Activity, 
@@ -444,31 +511,51 @@ export default function Home() {
           </div>
         )}
 
-        {/* Placeholder for other tabs - these would contain the actual module components */}
+        {/* Render actual module components */}
         {activeTab !== 'overview' && (
-          <Card className="border-0 shadow-lg bg-white">
-            <CardHeader>
-              <CardTitle className="text-xl text-slate-800 capitalize">
-                {activeTab.replace('-', ' ')} Module
-              </CardTitle>
-              <CardDescription className="text-slate-600">
-                Advanced {activeTab.replace('-', ' ')} capabilities and management interface
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12">
-                <Settings className="h-16 w-16 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-800 mb-2">Module Interface</h3>
-                <p className="text-slate-600 mb-6">
-                  This module contains advanced features and management tools for {activeTab.replace('-', ' ')}.
-                  The full interface would be displayed here with comprehensive functionality.
-                </p>
-                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                  Launch Module Interface
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            {componentMap[activeTab] ? (
+              <>
+                {/* Module Header */}
+                <Card className="border-0 shadow-lg bg-white">
+                  <CardHeader>
+                    <CardTitle className="text-xl text-slate-800 capitalize">
+                      {activeTab.replace('-', ' ')} Module
+                    </CardTitle>
+                    <CardDescription className="text-slate-600">
+                      Advanced {activeTab.replace('-', ' ')} capabilities and management interface
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+                {/* Module Component */}
+                {React.createElement(componentMap[activeTab])}
+              </>
+            ) : (
+              <Card className="border-0 shadow-lg bg-white">
+                <CardHeader>
+                  <CardTitle className="text-xl text-slate-800 capitalize">
+                    {activeTab.replace('-', ' ')} Module
+                  </CardTitle>
+                  <CardDescription className="text-slate-600">
+                    Advanced {activeTab.replace('-', ' ')} capabilities and management interface
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-12">
+                    <Settings className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-slate-800 mb-2">Module Interface</h3>
+                    <p className="text-slate-600 mb-6">
+                      This module contains advanced features and management tools for {activeTab.replace('-', ' ')}.
+                      The full interface would be displayed here with comprehensive functionality.
+                    </p>
+                    <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                      Launch Module Interface
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         )}
       </main>
     </div>

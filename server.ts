@@ -2,6 +2,7 @@
 import { setupSocket } from '@/lib/socket';
 import { ConsentCleanupService } from '@/lib/consent/ConsentCleanupService';
 import { SubjectRightsMonitoringService } from '@/lib/subject-rights/SubjectRightsMonitoringService';
+import { dbInitializer } from '@/lib/db/init';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import next from 'next';
@@ -13,6 +14,9 @@ const hostname = '0.0.0.0';
 // Custom server with Socket.IO integration
 async function createCustomServer() {
   try {
+    // Initialize database first
+    await dbInitializer.initialize();
+    
     // Create Next.js app
     const nextApp = next({ 
       dev,

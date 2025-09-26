@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { dbInitializer } from '@/lib/db/init';
 
 export interface AirtableEntry {
   id: string;
@@ -229,39 +230,12 @@ export class AirtableService {
   }
 
   async saveKnowledgeObjects(objects: KnowledgeObject[]): Promise<void> {
-    // Ensure system tenant exists
+    // Ensure database is initialized
     try {
-      await db.tenant.upsert({
-        where: { id: 'system' },
-        update: {},
-        create: {
-          id: 'system',
-          name: 'System',
-          domain: 'system.local',
-          status: 'ACTIVE',
-          config: {},
-        },
-      });
+      await dbInitializer.initialize();
     } catch (error) {
-      console.error('Error creating system tenant:', error);
-    }
-
-    // Ensure default compliance domain exists
-    try {
-      await db.complianceDomain.upsert({
-        where: { id: 'default' },
-        update: {},
-        create: {
-          id: 'default',
-          name: 'Global Regulatory Compliance',
-          description: 'Default compliance domain for global regulatory requirements',
-          regulations: JSON.stringify(['AML', 'KYC', 'PSD2', 'Investment', 'Insurance', 'Lending', 'Regulatory']),
-          isActive: true,
-          metadata: {},
-        },
-      });
-    } catch (error) {
-      console.error('Error creating default compliance domain:', error);
+      console.error('Error initializing database:', error);
+      throw error;
     }
 
     for (const obj of objects) {
@@ -398,39 +372,12 @@ export class AirtableService {
     regulationType: string;
     effectiveDate: string;
   }): Promise<KnowledgeObject> {
-    // Ensure system tenant exists
+    // Ensure database is initialized
     try {
-      await db.tenant.upsert({
-        where: { id: 'system' },
-        update: {},
-        create: {
-          id: 'system',
-          name: 'System',
-          domain: 'system.local',
-          status: 'ACTIVE',
-          config: {},
-        },
-      });
+      await dbInitializer.initialize();
     } catch (error) {
-      console.error('Error creating system tenant:', error);
-    }
-
-    // Ensure default compliance domain exists
-    try {
-      await db.complianceDomain.upsert({
-        where: { id: 'default' },
-        update: {},
-        create: {
-          id: 'default',
-          name: 'Global Regulatory Compliance',
-          description: 'Default compliance domain for global regulatory requirements',
-          regulations: JSON.stringify(['AML', 'KYC', 'PSD2', 'Investment', 'Insurance', 'Lending', 'Regulatory']),
-          isActive: true,
-          metadata: {},
-        },
-      });
-    } catch (error) {
-      console.error('Error creating default compliance domain:', error);
+      console.error('Error initializing database:', error);
+      throw error;
     }
 
     const id = `ko_local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

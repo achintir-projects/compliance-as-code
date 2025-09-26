@@ -1,7 +1,7 @@
 {
-  "name": "glassbox-ai-platform",
-  "version": "1.0.0",
-  "description": "Enterprise-Ready Regulatory Technology Platform implementing GlassBox AI Standard",
+  "name": "glassbox-ai-enhanced",
+  "version": "2.0.0",
+  "description": "GlassBox AI ENHANCED VERSION - The Global Operating System for Regulatory Technology",
   "private": true,
   "scripts": {
     "dev": "nodemon --exec \"npx tsx server.ts\" --watch server.ts --watch src --ext ts,tsx,js,jsx 2>&1 | tee dev.log",

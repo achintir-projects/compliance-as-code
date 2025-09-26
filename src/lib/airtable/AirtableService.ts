@@ -110,8 +110,8 @@ export class AirtableService {
         id: 'rec1',
         confidence: 'High',
         topic: 'Key Regulation',
-        fintechCategory: 'RegTech',
-        content: 'AML Rule 12.3: Flag any transaction > $10,000 without source-of-funds',
+        fintechCategory: 'Crypto/Blockchain',
+        content: 'Cryptocurrency transactions must include AML screening and wallet address verification',
         country: 'US',
         regulationType: 'AML',
         effectiveDate: '2024-01-01',
@@ -121,17 +121,6 @@ export class AirtableService {
         id: 'rec2',
         confidence: 'High',
         topic: 'Key Regulation',
-        fintechCategory: 'Payments',
-        content: 'Payment processing must include real-time fraud detection for all transactions over $1,000',
-        country: 'EU',
-        regulationType: 'PSD2',
-        effectiveDate: '2024-01-01',
-        lastUpdated: new Date().toISOString(),
-      },
-      {
-        id: 'rec3',
-        confidence: 'Medium',
-        topic: 'Key Regulation',
         fintechCategory: 'Insurance',
         content: 'Insurance claims must be processed within 48 hours of submission with proper verification',
         country: 'UK',
@@ -140,7 +129,29 @@ export class AirtableService {
         lastUpdated: new Date().toISOString(),
       },
       {
+        id: 'rec3',
+        confidence: 'High',
+        topic: 'Key Regulation',
+        fintechCategory: 'RegTech',
+        content: 'Regulatory reporting must be automated and submitted within 24 hours of threshold breach',
+        country: 'EU',
+        regulationType: 'Regulatory',
+        effectiveDate: '2024-01-01',
+        lastUpdated: new Date().toISOString(),
+      },
+      {
         id: 'rec4',
+        confidence: 'Medium',
+        topic: 'Key Regulation',
+        fintechCategory: 'Lending',
+        content: 'Loan applications must include credit score verification and affordability assessment',
+        country: 'US',
+        regulationType: 'Lending',
+        effectiveDate: '2024-01-01',
+        lastUpdated: new Date().toISOString(),
+      },
+      {
+        id: 'rec5',
         confidence: 'High',
         topic: 'Key Regulation',
         fintechCategory: 'Digital Banking',
@@ -151,12 +162,34 @@ export class AirtableService {
         lastUpdated: new Date().toISOString(),
       },
       {
-        id: 'rec5',
+        id: 'rec6',
+        confidence: 'High',
+        topic: 'Key Regulation',
+        fintechCategory: 'Payments',
+        content: 'Payment processing must include real-time fraud detection for all transactions over $1,000',
+        country: 'EU',
+        regulationType: 'PSD2',
+        effectiveDate: '2024-01-01',
+        lastUpdated: new Date().toISOString(),
+      },
+      {
+        id: 'rec7',
         confidence: 'Medium',
         topic: 'Key Regulation',
-        fintechCategory: 'WealthTech',
-        content: 'Investment recommendations must be based on customer risk profile and financial goals',
+        fintechCategory: 'Personal Finance',
+        content: 'Financial advice recommendations must be based on customer risk profile and financial goals',
         country: 'US',
+        regulationType: 'Investment',
+        effectiveDate: '2024-01-01',
+        lastUpdated: new Date().toISOString(),
+      },
+      {
+        id: 'rec8',
+        confidence: 'High',
+        topic: 'Key Regulation',
+        fintechCategory: 'WealthTech',
+        content: 'Portfolio management must include risk assessment and diversification requirements',
+        country: 'Global',
         regulationType: 'Investment',
         effectiveDate: '2024-01-01',
         lastUpdated: new Date().toISOString(),
@@ -185,10 +218,11 @@ export class AirtableService {
       'RegTech': 'RegTech',
       'Payments': 'Payments',
       'Insurance': 'Insurance',
-      'Digital Banking': 'Commercial Banking',
-      'WealthTech': 'Wealth Management',
-      'Crypto/Blockchain': 'Digital Assets',
-      'Digital Assets': 'Digital Assets',
+      'Digital Banking': 'Digital Banking',
+      'WealthTech': 'WealthTech',
+      'Crypto/Blockchain': 'Crypto/Blockchain',
+      'Lending': 'Lending',
+      'Personal Finance': 'Personal Finance',
     };
 
     return categoryMap[fintechCategory] || fintechCategory;
@@ -212,6 +246,24 @@ export class AirtableService {
       console.error('Error creating system tenant:', error);
     }
 
+    // Ensure default compliance domain exists
+    try {
+      await db.complianceDomain.upsert({
+        where: { id: 'default' },
+        update: {},
+        create: {
+          id: 'default',
+          name: 'Global Regulatory Compliance',
+          description: 'Default compliance domain for global regulatory requirements',
+          regulations: JSON.stringify(['AML', 'KYC', 'PSD2', 'Investment', 'Insurance', 'Lending', 'Regulatory']),
+          isActive: true,
+          metadata: {},
+        },
+      });
+    } catch (error) {
+      console.error('Error creating default compliance domain:', error);
+    }
+
     for (const obj of objects) {
       try {
         await db.knowledgeObject.upsert({
@@ -227,6 +279,7 @@ export class AirtableService {
             status: obj.status,
             lastUpdated: obj.lastUpdated,
             airtableId: obj.airtableId,
+            complianceDomainId: 'default',
           },
           create: {
             id: obj.id,
@@ -241,6 +294,7 @@ export class AirtableService {
             lastUpdated: obj.lastUpdated,
             airtableId: obj.airtableId,
             tenantId: 'system', // System-wide knowledge
+            complianceDomainId: 'default',
           },
         });
       } catch (error) {
@@ -305,6 +359,8 @@ export class AirtableService {
       topic: obj.topic,
       category: obj.category,
       content: obj.content,
+      country: obj.country,
+      regulationType: obj.regulationType,
       status: obj.status,
       lastUpdated: obj.lastUpdated.toISOString(),
       airtableId: obj.airtableId,
@@ -359,6 +415,24 @@ export class AirtableService {
       console.error('Error creating system tenant:', error);
     }
 
+    // Ensure default compliance domain exists
+    try {
+      await db.complianceDomain.upsert({
+        where: { id: 'default' },
+        update: {},
+        create: {
+          id: 'default',
+          name: 'Global Regulatory Compliance',
+          description: 'Default compliance domain for global regulatory requirements',
+          regulations: JSON.stringify(['AML', 'KYC', 'PSD2', 'Investment', 'Insurance', 'Lending', 'Regulatory']),
+          isActive: true,
+          metadata: {},
+        },
+      });
+    } catch (error) {
+      console.error('Error creating default compliance domain:', error);
+    }
+
     const id = `ko_local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const knowledgeObject: KnowledgeObject = {
       id,
@@ -388,6 +462,7 @@ export class AirtableService {
         lastUpdated: knowledgeObject.lastUpdated,
         airtableId: knowledgeObject.airtableId,
         tenantId: 'system',
+        complianceDomainId: 'default',
       },
     });
 
